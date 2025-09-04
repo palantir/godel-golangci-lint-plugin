@@ -1,0 +1,1 @@
+# godel-golangci-lint-plugin
