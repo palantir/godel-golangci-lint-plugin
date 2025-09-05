@@ -92,6 +92,10 @@ func projectParamFromFlags() (matcher.NamesPathsCfg, *config.PluginConfig, error
 
 	pluginConfig, err := config.PluginConfigFromFile(pluginConfigFileFlagVal)
 	if err != nil {
+		// if plugin config does not exist, continue with nil config
+		if errors.Is(err, os.ErrNotExist) {
+			return godelExcludeConfig, nil, nil
+		}
 		return godelExcludeConfig, nil, err
 	}
 	return godelExcludeConfig, pluginConfig, nil
