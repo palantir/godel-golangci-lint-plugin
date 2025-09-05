@@ -484,8 +484,8 @@ github.com/palantir/pkg/pkgpath v1.3.0 h1:S2kbdqSEMSHLgaEdr8LQuCju+AfzSvwwSUM/Q4
 github.com/palantir/pkg/pkgpath v1.3.0/go.mod h1:22X+LjC1DKT6Zc9KYTPXOc0AP95gzPIC3me45vz78ac=
 github.com/palantir/pkg/specdir v1.2.0 h1:O8ukQIYBUrYfOB+LDj88Ih7308KW9THuNy0/LcV7IoY=
 github.com/palantir/pkg/specdir v1.2.0/go.mod h1:uXmFsbADJKbsDmaTSSODThNJxzSTEaUuBLSdZ/7fGcg=
-github.com/palantir/pkg/yamlpatch v1.4.0 h1:W/Gig/JemzcEbW9jKTWsx0o40D8DSUtvgwW5/jeuePw=
-github.com/palantir/pkg/yamlpatch v1.4.0/go.mod h1:Ron0xhwgGlu+AvXiS7rQ65pk5Ft3bxhRbDiBnKyfVb4=
+github.com/palantir/pkg/yamlpatch v1.5.0 h1:186RUlcHFVf64onUhaI7nUCPzPIaRTQ5HJlKuv0d6NM=
+github.com/palantir/pkg/yamlpatch v1.5.0/go.mod h1:45cYAIiv9E0MiZnHjIIT2hGqi6Wah/DL6J1omJf2ny0=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
 github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
