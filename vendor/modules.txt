@@ -799,8 +799,8 @@ github.com/santhosh-tekuri/jsonschema/v6/kind
 # github.com/sashamelentyev/interfacebloat v1.1.0
 ## explicit; go 1.18
 github.com/sashamelentyev/interfacebloat/pkg/analyzer
-# github.com/sashamelentyev/usestdlibvars v1.28.0
-## explicit; go 1.20
+# github.com/sashamelentyev/usestdlibvars v1.29.0
+## explicit; go 1.23.0
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
 # github.com/securego/gosec/v2 v2.22.3
