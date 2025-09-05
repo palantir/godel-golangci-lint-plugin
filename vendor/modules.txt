@@ -134,10 +134,9 @@ github.com/charmbracelet/colorprofile
 # github.com/charmbracelet/lipgloss v1.1.0
 ## explicit; go 1.18
 github.com/charmbracelet/lipgloss
-# github.com/charmbracelet/x/ansi v0.8.0
-## explicit; go 1.18
+# github.com/charmbracelet/x/ansi v0.10.1
+## explicit; go 1.23.0
 github.com/charmbracelet/x/ansi
-github.com/charmbracelet/x/ansi/kitty
 github.com/charmbracelet/x/ansi/parser
 # github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd
 ## explicit; go 1.18
