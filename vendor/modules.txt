@@ -47,7 +47,7 @@ github.com/OpenPeeDeeP/depguard/v2/internal/utils
 # github.com/VividCortex/ewma v1.1.1
 ## explicit
 github.com/VividCortex/ewma
-# github.com/alecthomas/chroma/v2 v2.17.2
+# github.com/alecthomas/chroma/v2 v2.20.0
 ## explicit; go 1.22
 github.com/alecthomas/chroma/v2
 github.com/alecthomas/chroma/v2/formatters
