@@ -523,7 +523,7 @@ github.com/jgautheron/goconst
 # github.com/jingyugao/rowserrcheck v1.1.1
 ## explicit; go 1.13
 github.com/jingyugao/rowserrcheck/passes/rowserr
-# github.com/jjti/go-spancheck v0.6.4
+# github.com/jjti/go-spancheck v0.6.5
 ## explicit; go 1.22.1
 github.com/jjti/go-spancheck
 # github.com/julz/importas v0.2.0
