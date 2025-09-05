@@ -3,7 +3,7 @@ module github.com/palantir/godel-golangci-lint-plugin
 go 1.25.0
 
 require (
-	github.com/goccy/go-yaml v1.15.22
+	github.com/goccy/go-yaml v1.18.0
 	github.com/palantir/godel/v2 v2.133.0
 	github.com/palantir/pkg/cobracli v1.2.0
 	github.com/palantir/pkg/matcher v1.2.0
