@@ -577,8 +577,8 @@ github.com/lucasb-eyer/go-colorful
 # github.com/macabu/inamedparam v0.2.0
 ## explicit; go 1.23.0
 github.com/macabu/inamedparam
-# github.com/magiconair/properties v1.8.6
-## explicit; go 1.13
+# github.com/magiconair/properties v1.8.10
+## explicit; go 1.19
 github.com/magiconair/properties
 # github.com/manuelarte/funcorder v0.2.1
 ## explicit; go 1.23.0
