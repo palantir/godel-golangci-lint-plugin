@@ -455,8 +455,8 @@ github.com/golangci/golines
 # github.com/golangci/misspell v0.6.0
 ## explicit; go 1.21
 github.com/golangci/misspell
-# github.com/golangci/plugin-module-register v0.1.1
-## explicit; go 1.21
+# github.com/golangci/plugin-module-register v0.1.2
+## explicit; go 1.23.0
 github.com/golangci/plugin-module-register/register
 # github.com/golangci/revgrep v0.8.0
 ## explicit; go 1.21
