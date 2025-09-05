@@ -580,14 +580,10 @@ github.com/macabu/inamedparam
 # github.com/magiconair/properties v1.8.6
 ## explicit; go 1.13
 github.com/magiconair/properties
-# github.com/manuelarte/funcorder v0.2.1
+# github.com/manuelarte/funcorder v0.5.0
 ## explicit; go 1.23.0
 github.com/manuelarte/funcorder/analyzer
-github.com/manuelarte/funcorder/internal/astutils
-github.com/manuelarte/funcorder/internal/diag
-github.com/manuelarte/funcorder/internal/features
-github.com/manuelarte/funcorder/internal/fileprocessor
-github.com/manuelarte/funcorder/internal/models
+github.com/manuelarte/funcorder/internal
 # github.com/maratori/testableexamples v1.0.0
 ## explicit; go 1.19
 github.com/maratori/testableexamples/pkg/testableexamples
