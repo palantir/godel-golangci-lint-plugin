@@ -89,7 +89,7 @@ require (
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
 	github.com/golangci/golangci-lint/v2 v2.1.6 // indirect
 	github.com/golangci/golines v0.0.0-20250217134842-442fd0091d95 // indirect
-	github.com/golangci/misspell v0.6.0 // indirect
+	github.com/golangci/misspell v0.7.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
 	github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e // indirect
