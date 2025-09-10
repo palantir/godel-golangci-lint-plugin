@@ -114,7 +114,7 @@ github.com/butuzov/mirror/internal/checker
 # github.com/catenacyber/perfsprint v0.9.1
 ## explicit; go 1.22.0
 github.com/catenacyber/perfsprint/analyzer
-# github.com/ccojocar/zxcvbn-go v1.0.2
+# github.com/ccojocar/zxcvbn-go v1.0.4
 ## explicit; go 1.20
 github.com/ccojocar/zxcvbn-go
 github.com/ccojocar/zxcvbn-go/adjacency
@@ -802,8 +802,8 @@ github.com/sashamelentyev/interfacebloat/pkg/analyzer
 ## explicit; go 1.20
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
-# github.com/securego/gosec/v2 v2.22.3
-## explicit; go 1.23.0
+# github.com/securego/gosec/v2 v2.22.8
+## explicit; go 1.24.0
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/analyzers
 github.com/securego/gosec/v2/cwe
