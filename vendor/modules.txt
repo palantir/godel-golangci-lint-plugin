@@ -200,9 +200,10 @@ github.com/fatih/structtag
 # github.com/firefart/nonamedreturns v1.0.6
 ## explicit; go 1.23.0
 github.com/firefart/nonamedreturns/analyzer
-# github.com/fsnotify/fsnotify v1.5.4
-## explicit; go 1.16
+# github.com/fsnotify/fsnotify v1.9.0
+## explicit; go 1.17
 github.com/fsnotify/fsnotify
+github.com/fsnotify/fsnotify/internal
 # github.com/fzipp/gocyclo v0.6.0
 ## explicit; go 1.18
 github.com/fzipp/gocyclo
@@ -237,7 +238,7 @@ github.com/go-toolsmith/strparse
 # github.com/go-toolsmith/typep v1.1.0
 ## explicit; go 1.16
 github.com/go-toolsmith/typep
-# github.com/go-viper/mapstructure/v2 v2.2.1
+# github.com/go-viper/mapstructure/v2 v2.4.0
 ## explicit; go 1.18
 github.com/go-viper/mapstructure/v2
 github.com/go-viper/mapstructure/v2/internal/errors
@@ -497,18 +498,6 @@ github.com/hashicorp/go-version
 ## explicit; go 1.18
 github.com/hashicorp/golang-lru/v2/internal
 github.com/hashicorp/golang-lru/v2/simplelru
-# github.com/hashicorp/hcl v1.0.0
-## explicit
-github.com/hashicorp/hcl
-github.com/hashicorp/hcl/hcl/ast
-github.com/hashicorp/hcl/hcl/parser
-github.com/hashicorp/hcl/hcl/printer
-github.com/hashicorp/hcl/hcl/scanner
-github.com/hashicorp/hcl/hcl/strconv
-github.com/hashicorp/hcl/hcl/token
-github.com/hashicorp/hcl/json/parser
-github.com/hashicorp/hcl/json/scanner
-github.com/hashicorp/hcl/json/token
 # github.com/hexops/gotextdiff v1.0.3
 ## explicit; go 1.16
 github.com/hexops/gotextdiff
@@ -577,9 +566,6 @@ github.com/lucasb-eyer/go-colorful
 # github.com/macabu/inamedparam v0.2.0
 ## explicit; go 1.23.0
 github.com/macabu/inamedparam
-# github.com/magiconair/properties v1.8.6
-## explicit; go 1.13
-github.com/magiconair/properties
 # github.com/manuelarte/funcorder v0.2.1
 ## explicit; go 1.23.0
 github.com/manuelarte/funcorder/analyzer
@@ -623,9 +609,6 @@ github.com/mgechev/revive/rule
 # github.com/mitchellh/go-homedir v1.1.0
 ## explicit
 github.com/mitchellh/go-homedir
-# github.com/mitchellh/mapstructure v1.5.0
-## explicit; go 1.14
-github.com/mitchellh/mapstructure
 # github.com/moricho/tparallel v0.3.2
 ## explicit; go 1.20
 github.com/moricho/tparallel
@@ -699,9 +682,6 @@ github.com/palantir/pkg/specdir
 github.com/palantir/pkg/yamlpatch/goccyyamlpatcher
 github.com/palantir/pkg/yamlpatch/internal/yamlpatchcommon
 github.com/palantir/pkg/yamlpatch/yamlpatch
-# github.com/pelletier/go-toml v1.9.5
-## explicit; go 1.12
-github.com/pelletier/go-toml
 # github.com/pelletier/go-toml/v2 v2.2.4
 ## explicit; go 1.21.0
 github.com/pelletier/go-toml/v2
@@ -788,6 +768,9 @@ github.com/ryancurrah/gomodguard
 # github.com/ryanrolds/sqlclosecheck v0.5.1
 ## explicit; go 1.20
 github.com/ryanrolds/sqlclosecheck/pkg/analyzer
+# github.com/sagikazarmark/locafero v0.11.0
+## explicit; go 1.23.0
+github.com/sagikazarmark/locafero
 # github.com/sanposhiho/wastedassign/v2 v2.1.0
 ## explicit; go 1.18
 github.com/sanposhiho/wastedassign/v2
@@ -820,37 +803,37 @@ github.com/sivchari/containedctx
 github.com/sonatard/noctx
 github.com/sonatard/noctx/ngfunc
 github.com/sonatard/noctx/reqwithoutctx
+# github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
+## explicit; go 1.20
+github.com/sourcegraph/conc
+github.com/sourcegraph/conc/panics
+github.com/sourcegraph/conc/pool
 # github.com/sourcegraph/go-diff v0.7.0
 ## explicit; go 1.14
 github.com/sourcegraph/go-diff/diff
-# github.com/spf13/afero v1.14.0
+# github.com/spf13/afero v1.15.0
 ## explicit; go 1.23.0
 github.com/spf13/afero
 github.com/spf13/afero/internal/common
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.5.0
-## explicit; go 1.18
+# github.com/spf13/cast v1.10.0
+## explicit; go 1.21.0
 github.com/spf13/cast
+github.com/spf13/cast/internal
 # github.com/spf13/cobra v1.9.1
 ## explicit; go 1.15
 github.com/spf13/cobra
-# github.com/spf13/jwalterweatherman v1.1.0
-## explicit
-github.com/spf13/jwalterweatherman
-# github.com/spf13/pflag v1.0.6
+# github.com/spf13/pflag v1.0.10
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/spf13/viper v1.12.0
-## explicit; go 1.17
+# github.com/spf13/viper v1.21.0
+## explicit; go 1.23.0
 github.com/spf13/viper
-github.com/spf13/viper/internal/encoding
 github.com/spf13/viper/internal/encoding/dotenv
-github.com/spf13/viper/internal/encoding/hcl
-github.com/spf13/viper/internal/encoding/ini
-github.com/spf13/viper/internal/encoding/javaproperties
 github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
+github.com/spf13/viper/internal/features
 # github.com/ssgreg/nlreturn/v2 v2.2.1
 ## explicit; go 1.13
 github.com/ssgreg/nlreturn/v2/pkg/nlreturn
@@ -860,13 +843,13 @@ github.com/stbenjam/no-sprintf-host-port/pkg/analyzer
 # github.com/stretchr/objx v0.5.2
 ## explicit; go 1.20
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.10.0
+# github.com/stretchr/testify v1.11.1
 ## explicit; go 1.17
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
-# github.com/subosito/gotenv v1.4.1
+# github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
 github.com/subosito/gotenv
 # github.com/tdakkota/asciicheck v0.4.1
@@ -958,6 +941,9 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
+# go.yaml.in/yaml/v3 v3.0.4
+## explicit; go 1.16
+go.yaml.in/yaml/v3
 # golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac
 ## explicit; go 1.18
 golang.org/x/exp/typeparams
@@ -978,6 +964,10 @@ golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.28.0
 ## explicit; go 1.23.0
+golang.org/x/text/encoding
+golang.org/x/text/encoding/internal
+golang.org/x/text/encoding/internal/identifier
+golang.org/x/text/encoding/unicode
 golang.org/x/text/feature/plural
 golang.org/x/text/internal
 golang.org/x/text/internal/catmsg
@@ -987,6 +977,7 @@ golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/number
 golang.org/x/text/internal/stringset
 golang.org/x/text/internal/tag
+golang.org/x/text/internal/utf8internal
 golang.org/x/text/language
 golang.org/x/text/message
 golang.org/x/text/message/catalog
@@ -1119,9 +1110,6 @@ google.golang.org/protobuf/types/gofeaturespb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
-# gopkg.in/ini.v1 v1.67.0
-## explicit
-gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2
