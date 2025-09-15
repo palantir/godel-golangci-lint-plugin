@@ -78,6 +78,9 @@ func convertNamesPathConfigsToExclusionsPaths(namesPathsCfg matcher.NamesPathsCf
 		// name within a directory
 		out = append(out, fmt.Sprintf(`.+/%s$`, name))
 
+		// nested directory
+		out = append(out, fmt.Sprintf(`.+/%s/.+`, name))
+
 		// top-level name
 		out = append(out, fmt.Sprintf(`^%s$`, name))
 	}
