@@ -372,6 +372,7 @@ linters:
   exclusions:
     paths:
       - ".+/.*\\.conjure.go$"
+      - ".+/.*\\.conjure.go/.+"
       - "^.*\\.conjure.go$"
       - internal/generated/.*
       - ^internal/generated$
@@ -493,6 +494,7 @@ linters:
   exclusions:
     paths:
       - ".+/.*\\.conjure.go$"
+      - ".+/.*\\.conjure.go/.+"
       - "^.*\\.conjure.go$"
       - internal/generated/.*
       - ^internal/generated$
