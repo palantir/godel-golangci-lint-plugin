@@ -73,7 +73,7 @@ func convertNamesPathConfigsToExclusionsPaths(namesPathsCfg matcher.NamesPathsCf
 		return nil
 	}
 
-	out := make([]string, 0, len(namesPathsCfg.Names)*3+len(namesPathsCfg.Paths)*2)
+	out := make([]string, 0, len(namesPathsCfg.Names)*4+len(namesPathsCfg.Paths)*2)
 	for _, name := range namesPathsCfg.Names {
 		// name within a directory
 		out = append(out, fmt.Sprintf(`.+/%s$`, name))
@@ -83,6 +83,9 @@ func convertNamesPathConfigsToExclusionsPaths(namesPathsCfg matcher.NamesPathsCf
 
 		// top-level name
 		out = append(out, fmt.Sprintf(`^%s$`, name))
+
+		// top-level directory
+		out = append(out, fmt.Sprintf(`^%s/.+`, name))
 	}
 
 	for _, path := range namesPathsCfg.Paths {

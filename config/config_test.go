@@ -374,6 +374,7 @@ linters:
       - ".+/.*\\.conjure.go$"
       - ".+/.*\\.conjure.go/.+"
       - "^.*\\.conjure.go$"
+      - "^.*\\.conjure.go/.+"
       - internal/generated/.*
       - ^internal/generated$
 
@@ -496,6 +497,7 @@ linters:
       - ".+/.*\\.conjure.go$"
       - ".+/.*\\.conjure.go/.+"
       - "^.*\\.conjure.go$"
+      - "^.*\\.conjure.go/.+"
       - internal/generated/.*
       - ^internal/generated$
 
