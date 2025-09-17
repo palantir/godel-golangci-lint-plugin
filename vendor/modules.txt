@@ -44,8 +44,8 @@ github.com/Antonboom/testifylint/internal/testify
 ## explicit; go 1.18
 github.com/BurntSushi/toml
 github.com/BurntSushi/toml/internal
-# github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24
-## explicit; go 1.13
+# github.com/Djarvur/go-err113 v0.1.1
+## explicit; go 1.23.0
 github.com/Djarvur/go-err113
 # github.com/Masterminds/semver/v3 v3.4.0
 ## explicit; go 1.21
