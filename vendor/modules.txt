@@ -540,8 +540,8 @@ github.com/kisielk/errcheck/errcheck
 # github.com/kkHAIKE/contextcheck v1.1.6
 ## explicit; go 1.23.0
 github.com/kkHAIKE/contextcheck
-# github.com/kulti/thelper v0.6.3
-## explicit; go 1.18
+# github.com/kulti/thelper v0.7.0
+## explicit; go 1.25
 github.com/kulti/thelper/pkg/analyzer
 # github.com/kunwardeep/paralleltest v1.0.14
 ## explicit; go 1.23.0
