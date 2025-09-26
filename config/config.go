@@ -153,7 +153,98 @@ func MergePluginConfigWithConfig(configBytes GolangCILintConfig, cfg *PluginConf
 		return nil, err
 	}
 
+	applied, err = moveCustomLinterSettingsToCorrectLocation(applied)
+	if err != nil {
+		return nil, err
+	}
+
 	return applied, nil
+}
+
+func moveCustomLinterSettingsToCorrectLocation(yamlBytes []byte) ([]byte, error) {
+	settingsNode, err := yamlPathForExistingNode(yamlBytes, "/linters/settings")
+	if err != nil {
+		return nil, err
+	}
+	if settingsNode == nil {
+		return yamlBytes, nil
+	}
+
+	settingsCustomNode, err := yamlPathForExistingNode(yamlBytes, "/linters/settings/custom")
+	if err != nil {
+		return nil, err
+	}
+	if settingsCustomNode == nil {
+		return yamlBytes, nil
+	}
+
+	var settingsEntries yaml.MapSlice
+	if err := settingsNode.Read(bytes.NewReader(yamlBytes), &settingsEntries); err != nil {
+		return nil, errors.Wrapf(err, "failed to read settings node")
+	}
+	settingsKeys := toStringToMapValue(settingsEntries)
+
+	var settingsCustomEntries yaml.MapSlice
+	if err := settingsCustomNode.Read(bytes.NewReader(yamlBytes), &settingsCustomEntries); err != nil {
+		return nil, errors.Wrapf(err, "failed to read settings.custom node")
+	}
+	settingsCustomKeys := stringKeysSliceFromMapSlice(settingsCustomEntries)
+
+	for _, currCustomKey := range settingsCustomKeys {
+		mapItem, ok := settingsKeys[currCustomKey]
+		// no config for custom plugin in "settings" block
+		if !ok {
+			continue
+		}
+
+		// a custom linter is specified in "settings.custom" node, and settings for that linter are specified in the
+		// "settings.[linter]" node: move "settings.[linter]" to "settings.custom.[linter].settings".
+		// For example, if both "settings.custom.foo" and "settings.foo" exist, move the content of "settings.foo"
+		// to "settings.custom.foo.settings" (the "foo" in "settings.foo" is renamed to "settings") and remove
+		// "settings.foo".
+
+		// remove the old entry
+		yamlBytes, err = applyRemoveYAMLPath(yamlBytes, yamlpatch.MustParsePath("/linters/settings/"+currCustomKey))
+		if err != nil {
+			return nil, err
+		}
+
+		// rename map item key from name of linter to "settings"
+		mapItem.Key = "settings"
+
+		yamlBytes, err = applyAddOrSetYAMLMapPatch(yamlBytes, "/linters/settings/custom/"+currCustomKey, yaml.MapSlice{
+			mapItem,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return yamlBytes, nil
+}
+
+func stringKeysSliceFromMapSlice(m yaml.MapSlice) []string {
+	var settingsKeys []string
+	for _, entry := range m {
+		keyStr, ok := entry.Key.(string)
+		if !ok {
+			continue
+		}
+		settingsKeys = append(settingsKeys, keyStr)
+	}
+	return settingsKeys
+}
+
+func toStringToMapValue(m yaml.MapSlice) map[string]yaml.MapItem {
+	keyToItem := make(map[string]yaml.MapItem)
+	for _, item := range m {
+		keyStr, ok := item.Key.(string)
+		if !ok {
+			continue
+		}
+		keyToItem[keyStr] = item
+	}
+	return keyToItem
 }
 
 func applyAddOrSetYAMLMapPatch(yamlBytes []byte, yamlPath string, mapValue yaml.MapSlice) ([]byte, error) {
@@ -190,6 +281,22 @@ func applyAddYAMLSlicePatch[T any](yamlBytes []byte, yamlPath string, slice []T)
 		return nil, errors.Wrapf(err, "failed to create patch for %s", yamlPath)
 	}
 	applied, err = patcher.Apply(applied, addSlicePatch)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to apply patch for %s", yamlPath)
+	}
+	return applied, nil
+}
+
+func applyRemoveYAMLPath(yamlBytes []byte, yamlPath yamlpatch.Path) ([]byte, error) {
+	patcher := goccyyamlpatcher.New()
+	applied := yamlBytes
+
+	applied, err := patcher.Apply(applied, yamlpatch.Patch{
+		{
+			Type: yamlpatch.OperationRemove,
+			Path: yamlPath,
+		},
+	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to apply patch for %s", yamlPath)
 	}
@@ -326,19 +433,33 @@ func createAddYAMLSlicePatch[T any](yamlBytes []byte, yamlPath string, slice []T
 // Returns true if the node at the specified YAML path exists in the provided YAML bytes, false otherwise. The provided
 // YAML path should be in the format used by YAML patch, e.g. "/path/to/node".
 func checkNodeExists(yamlBytes []byte, yamlPath string) (bool, error) {
+	yPath, err := yamlPathForExistingNode(yamlBytes, yamlPath)
+	if err != nil {
+		return false, err
+	}
+	return yPath != nil, nil
+}
+
+// Returns a non-nil *yaml.Path representation of the provided YAML path if there exists a node at the specified YAML
+// path in the provided YAML bytes, nil otherwise. The provided YAML path should be in the format used by YAML patch,
+// e.g. "/path/to/node".
+func yamlPathForExistingNode(yamlBytes []byte, yamlPath string) (*yaml.Path, error) {
 	yPath, err := yaml.PathString(yamlPatchPathToGoccyPathString(yamlPath))
 	if err != nil {
-		return false, fmt.Errorf("failed to parse yamlPath %q: %w", yamlPath, err)
+		return nil, fmt.Errorf("failed to parse yamlPath %q: %w", yamlPath, err)
 	}
 
 	node, err := yPath.ReadNode(bytes.NewReader(yamlBytes))
 	if err != nil {
 		if errors.Is(err, yaml.ErrNotFoundNode) {
-			return false, nil
+			return nil, nil
 		}
-		return false, fmt.Errorf("failed to read node from YAML bytes: %w", err)
+		return nil, fmt.Errorf("failed to read node from YAML bytes: %w", err)
 	}
-	return node != nil, nil
+	if node == nil {
+		return nil, nil
+	}
+	return yPath, nil
 }
 
 // Converts a YAML patch path (e.g. "/path/to/node") to a goccy/go-yaml compatible path string (e.g. "$.path.to.node").

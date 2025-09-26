@@ -246,11 +246,63 @@ linters:
 `,
 		},
 		{
+			name: "moves custom linter configuration to the correct location",
+			baseConfig: `version: "2"
+linters:
+  default: none
+
+  settings:
+    custom:
+      safelogging:
+        type: module
+        description: A linter that verifies that information that is logged is safe to log.
+  enable:
+    - safelogging
+`,
+			pluginConfig: `linters:
+  settings:
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+    safelogging:
+      const-message-logging-functions:
+        - function: fmt.Printf
+          message-param-index: 0
+`,
+			want: `version: "2"
+linters:
+  default: none
+
+  settings:
+    custom:
+      safelogging:
+        type: module
+        description: A linter that verifies that information that is logged is safe to log.
+        settings:
+          const-message-logging-functions:
+            - function: fmt.Printf
+              message-param-index: 0
+    revive:
+      rules:
+        - disabled: true
+          name: package-comments
+  enable:
+    - safelogging
+`,
+		},
+		{
 			name: "merges full configuration",
 			baseConfig: `version: "2"
 
 linters:
   default: none
+
+  settings:
+    custom:
+      safelogging:
+        type: module
+        description: A linter that verifies that information that is logged is safe to log.
 
   # Enable Palantir-specific linters
   enable:
@@ -258,6 +310,7 @@ linters:
     - govet
     - ineffassign
     - revive
+    - safelogging
     - unconvert
     - unused
 
@@ -277,6 +330,15 @@ run:
     - copyloopvar
   disable:
     - asasalint
+  settings:
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+    safelogging:
+      const-message-logging-functions:
+        - function: fmt.Printf
+          message-param-index: 0
   exclusions:
     rules:
       - linters:
@@ -290,12 +352,27 @@ run:
 linters:
   default: none
 
+  settings:
+    custom:
+      safelogging:
+        type: module
+        description: A linter that verifies that information that is logged is safe to log.
+        settings:
+          const-message-logging-functions:
+            - function: fmt.Printf
+              message-param-index: 0
+    revive:
+      rules:
+        - disabled: true
+          name: package-comments
+
   # Enable Palantir-specific linters
   enable:
     - errcheck
     - govet
     - ineffassign
     - revive
+    - safelogging
     - unconvert
     - unused
     - copyloopvar
