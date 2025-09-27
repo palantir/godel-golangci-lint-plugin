@@ -957,7 +957,7 @@ go-simpler.org/sloglint
 # go.augendre.info/arangolint v0.2.0
 ## explicit; go 1.23.0
 go.augendre.info/arangolint/pkg/analyzer
-# go.augendre.info/fatcontext v0.8.1
+# go.augendre.info/fatcontext v0.9.0
 ## explicit; go 1.23.0
 go.augendre.info/fatcontext/pkg/analyzer
 # go.uber.org/automaxprocs v1.6.0
