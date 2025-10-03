@@ -27,6 +27,11 @@ import (
 // the configuration that can be specified by the user. This user-provided configuration
 // is merged with a hard-coded base configuration.
 type PluginConfig struct {
+	// Disable specifies whether the golangci-lint plugin should be disabled. If true, the "lint" command will be a
+	// noop. Exists to allow the entire plugin to be "turned off" without removing it from the godel configuration.
+	// This is a plugin-specific configuration value and is not merged into the golangci-lint configuration.
+	Disable bool `yaml:"disable,omitempty"`
+
 	Linters LintersConfig `yaml:"linters,omitempty"`
 }
 

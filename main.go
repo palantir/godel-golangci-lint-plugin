@@ -15,7 +15,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/palantir/godel-golangci-lint-plugin/cmd"
@@ -25,12 +24,6 @@ import (
 func main() {
 	if ok := pluginapi.InfoCmd(os.Args, os.Stdout, cmd.PluginInfo); ok {
 		return
-	}
-
-	// initialize commands that require assets
-	if err := cmd.InitAssetCmds(os.Args[1:]); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error: golangci-lint-plugin: failed to load asset: %v\n", err)
-		os.Exit(1)
 	}
 	os.Exit(cmd.Execute())
 }
