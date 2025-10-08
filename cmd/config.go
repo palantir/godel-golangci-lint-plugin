@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -24,8 +25,13 @@ var (
 	configCmd = &cobra.Command{
 		Use:   "config",
 		Short: "Prints the configuration used by the golangci-lint plugin",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			assetRunner, _, err := NewAssetRunner()
+			if err != nil {
+				return errors.Wrap(err, "failed to initialize golangci-lint asset runner")
+			}
 			_, _ = fmt.Fprint(cmd.OutOrStdout(), string(assetRunner.Config()))
+			return nil
 		},
 	}
 )

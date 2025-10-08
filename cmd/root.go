@@ -16,11 +16,11 @@ package cmd
 
 import (
 	"github.com/palantir/godel-golangci-lint-plugin/cmd/internal/assetloader"
+	"github.com/palantir/godel-golangci-lint-plugin/config"
 	"github.com/palantir/godel/v2/framework/pluginapi"
 	"github.com/palantir/pkg/cobracli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 var (
@@ -29,11 +29,6 @@ var (
 	pluginConfigFileFlagVal string
 	godelConfigFileFlagVal  string
 	assetsFlagVal           []string
-
-	// Package-level variable that is set by InitAssetCmds.
-	// Is guaranteed to be set and valid after InitAssetCmds is called (if it is not valid, an error is returned and
-	// the program will not run).
-	assetRunner *GolangCILintAssetRunner
 )
 
 var rootCmd = &cobra.Command{
@@ -44,23 +39,30 @@ func Execute() int {
 	return cobracli.ExecuteWithDebugVarAndDefaultParams(rootCmd, &debugFlagVal)
 }
 
-func InitAssetCmds(args []string) error {
-	if _, _, err := rootCmd.Traverse(args); err != nil && err != pflag.ErrHelp {
-		return errors.Wrapf(err, "failed to parse arguments")
-	}
-
+// NewAssetRunner initializes and returns a GolangCILintAssetRunner. The assets and the exclude and plugin configuration
+// are loaded based on flag values, Returns the loaded plugin configuration as well (which may be nil if it is empty).
+func NewAssetRunner() (*GolangCILintAssetRunner, *config.PluginConfig, error) {
 	assetInfo, err := assetloader.GetAssetInfo(assetsFlagVal)
 	if err != nil {
-		return err
+		return nil, nil, errors.Wrap(err, "failed to load assets")
 	}
 
-	golangCILintConfig, err := getConfig(assetInfo.ConfigProvidedByAsset)
+	excludes, err := godelExcludeConfigFromFlags()
 	if err != nil {
-		return err
+		return nil, nil, errors.Wrap(err, "failed to load project excludes from godel config")
 	}
 
-	assetRunner = NewGolangCILintAssetRunner(assetInfo.GolangCILintAssetPath, golangCILintConfig)
-	return nil
+	pluginConfig, err := pluginConfigFromFlags()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to load plugin configuration")
+	}
+
+	golangCILintConfig, err := config.DefaultPalantirConfigMergedWithExcludeMatchersAndPluginConfig(assetInfo.ConfigProvidedByAsset, excludes, pluginConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return NewGolangCILintAssetRunner(assetInfo.GolangCILintAssetPath, golangCILintConfig), pluginConfig, nil
 }
 
 func init() {

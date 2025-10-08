@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,11 @@ var (
 		Use:   "linters [flags]",
 		Short: "List current linters configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDelegatedGolangCILintCommand([]string{"linters"}, nil, cmd.OutOrStdout(), cmd.ErrOrStderr(), debugFlagVal)
+			assetRunner, _, err := NewAssetRunner()
+			if err != nil {
+				return errors.Wrap(err, "failed to initialize golangci-lint asset runner")
+			}
+			return runDelegatedGolangCILintCommand(assetRunner, []string{"linters"}, nil, cmd.OutOrStdout(), cmd.ErrOrStderr(), debugFlagVal)
 		},
 	}
 )

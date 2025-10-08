@@ -32,6 +32,16 @@ var (
 		Use:   "lint [flags] [checks]",
 		Short: "Run linters (runs all linters if none are specified)",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			assetRunner, pluginConfig, err := NewAssetRunner()
+			if err != nil {
+				return errors.Wrap(err, "failed to initialize golangci-lint asset runner")
+			}
+
+			// if plugin is disabled, do nothing
+			if pluginConfig != nil && pluginConfig.Disable {
+				return nil
+			}
+
 			preConfigArgs := []string{
 				"run",
 			}
@@ -51,7 +61,7 @@ var (
 				postConfigArgs = append(postConfigArgs, "--fix")
 			}
 
-			return runDelegatedGolangCILintCommand(preConfigArgs, postConfigArgs, cmd.OutOrStdout(), cmd.ErrOrStderr(), debugFlagVal)
+			return runDelegatedGolangCILintCommand(assetRunner, preConfigArgs, postConfigArgs, cmd.OutOrStdout(), cmd.ErrOrStderr(), debugFlagVal)
 		},
 	}
 )
@@ -63,7 +73,7 @@ var (
 // the same exit code as the asset runner process. As such, this function should be considered terminal: there should be
 // no expectation that this function returns control to the caller (including for running deferred functions or
 // cleanup).
-func runDelegatedGolangCILintCommand(preConfigArgs, postConfigArgs []string, stdout, stderr io.Writer, debugMode bool) error {
+func runDelegatedGolangCILintCommand(assetRunner *GolangCILintAssetRunner, preConfigArgs, postConfigArgs []string, stdout, stderr io.Writer, debugMode bool) error {
 	exitCode, err := assetRunner.RunGolangCILintWithConfig(preConfigArgs, postConfigArgs, stderr, stdout, debugMode)
 	if err != nil {
 		return err
@@ -76,29 +86,20 @@ func runDelegatedGolangCILintCommand(preConfigArgs, postConfigArgs []string, std
 	return nil
 }
 
-func getConfig(baseConfig []byte) (config.GolangCILintConfig, error) {
-	excludes, pluginConfig, err := projectParamFromFlags()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read project excludes from flags")
-	}
-	return config.DefaultPalantirConfigMergedWithExcludeMatchersAndPluginConfig(baseConfig, excludes, pluginConfig)
+func godelExcludeConfigFromFlags() (matcher.NamesPathsCfg, error) {
+	return godelconfig.ReadGodelConfigExcludesFromFile(godelConfigFileFlagVal)
 }
 
-func projectParamFromFlags() (matcher.NamesPathsCfg, *config.PluginConfig, error) {
-	godelExcludeConfig, err := godelconfig.ReadGodelConfigExcludesFromFile(godelConfigFileFlagVal)
-	if err != nil {
-		return godelExcludeConfig, nil, err
-	}
-
+func pluginConfigFromFlags() (*config.PluginConfig, error) {
 	pluginConfig, err := config.PluginConfigFromFile(pluginConfigFileFlagVal)
 	if err != nil {
 		// if plugin config does not exist, continue with nil config
 		if errors.Is(err, os.ErrNotExist) {
-			return godelExcludeConfig, nil, nil
+			return nil, nil
 		}
-		return godelExcludeConfig, nil, err
+		return nil, err
 	}
-	return godelExcludeConfig, pluginConfig, nil
+	return pluginConfig, nil
 }
 
 func init() {
