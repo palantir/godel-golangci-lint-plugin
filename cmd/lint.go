@@ -17,16 +17,21 @@ package cmd
 import (
 	"io"
 	"os"
+	"slices"
 
 	"github.com/palantir/godel-golangci-lint-plugin/config"
+	"github.com/palantir/godel-golangci-lint-plugin/internal/compiles"
 	godelconfig "github.com/palantir/godel/v2/framework/godel/config"
 	"github.com/palantir/pkg/matcher"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
+const compilesCheckName = "compiles"
+
 var (
-	fixFlagVal bool
+	disableCompilesCheckFlagVal bool
+	fixFlagVal                  bool
 
 	lintCmd = &cobra.Command{
 		Use:   "lint [flags] [checks]",
@@ -40,6 +45,36 @@ var (
 			// if plugin is disabled, do nothing
 			if pluginConfig != nil && pluginConfig.Disable {
 				return nil
+			}
+
+			// if no checks were specified or "compiles" was specified, run compiles check first.
+			// If check fails, exit with the exit code.
+			// If check succeeds and "compiles" was specified as an argument, remove it from the arguments (it is not
+			// an actual check).
+			if compilesCheckArgIdx := slices.Index(args, compilesCheckName); len(args) == 0 || compilesCheckArgIdx != -1 {
+				// only run compiles check if it is not disabled by flag.
+				// not a conditional on the full block because the logic to remove "compiles" from args should still run.
+				if !disableCompilesCheckFlagVal {
+					// this should match the value that is used by golangci-lint. The current construction of the plugin
+					// invokes golangci-lint without any arguments, which causes it to use "./...".
+					const pkgSelector = "./..."
+					if compilesRunResult := compiles.Run([]string{pkgSelector}, debugFlagVal, cmd.OutOrStdout()); compilesRunResult != 0 {
+						os.Exit(compilesRunResult)
+					}
+				}
+
+				if compilesCheckArgIdx != -1 {
+					// remove "compiles" argument if it was provided
+					args = slices.Delete(args, compilesCheckArgIdx, compilesCheckArgIdx+1)
+
+					// if "compiles" was the only argument, exit successfully
+					if len(args) == 0 {
+						// Print success output. Only do this if exiting at this point because otherwise golangci-lint
+						// will print its own output.
+						compiles.SuccessOutput(cmd.OutOrStdout())
+						return nil
+					}
+				}
 			}
 
 			preConfigArgs := []string{
@@ -103,6 +138,7 @@ func pluginConfigFromFlags() (*config.PluginConfig, error) {
 }
 
 func init() {
+	lintCmd.Flags().BoolVarP(&disableCompilesCheckFlagVal, "disable-compiles-check", "", false, "Disable the compiles check that the plugin runs before invoking linters")
 	lintCmd.Flags().BoolVarP(&fixFlagVal, "fix", "", false, "Fix found issues (if it's supported by the linter)")
 
 	rootCmd.AddCommand(lintCmd)
