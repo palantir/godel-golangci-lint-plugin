@@ -24,6 +24,8 @@ is a YAML file that is defined as follows:
 
 ```
 type PluginConfig struct {
+	Disable bool `yaml:"disable,omitempty"`
+
 	Linters LintersConfig `yaml:"linters,omitempty"`
 }
 
@@ -80,7 +82,15 @@ in the following manner:
 ## Design
 `golangci-lint-plugin` provides `godel` tasks, reads the plugin configuration from the
 `godel/config/golangci-lint-plugin.yml` file, and invokes `golangci-lint` with the appropriate flags, arguments, and
-configuration.
+configuration when running specific tasks (for example, `lint`).
+
+The `lint` task performs custom logic that first loads all packages in the project using the "./..." matcher (the same
+matcher used by `golangci-lint`) and, if there are any package-level errors, prints all of them and then exits. This
+ensures that all the packages compile and, if not, ensures that all errors are printed (in contrast to the `typecheck`
+check performed by `golangci-lint`, which only prints the first error encountered and only loads packages in the mode
+with the least amount of information possible based on the linters being run). This behavior can be disabled using the
+`--disable-compiles-check` flag. If there are no compile errors, the task then invokes the `golangci-lint` with the
+appropriate flags and arguments to invoke the `run` command.
 
 The `golangci-lint` executable that is invoked is specified to the plugin as an asset in the form of a TGZ that contains
 a single file that is the `golangci-lint` executable (the asset resolver should allow resolving the correct asset for a
