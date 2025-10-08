@@ -78,6 +78,12 @@ github.com/alecthomas/chroma/v2/styles
 # github.com/alecthomas/go-check-sumtype v0.3.1
 ## explicit; go 1.22.0
 github.com/alecthomas/go-check-sumtype
+# github.com/alecthomas/kingpin/v2 v2.4.0
+## explicit; go 1.17
+github.com/alecthomas/kingpin/v2
+# github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b
+## explicit; go 1.15
+github.com/alecthomas/units
 # github.com/alexkohler/nakedret/v2 v2.0.6
 ## explicit; go 1.23.0
 github.com/alexkohler/nakedret/v2
@@ -495,9 +501,15 @@ github.com/golangci/golangci-lint/v2/pkg/report
 github.com/golangci/golangci-lint/v2/pkg/result
 github.com/golangci/golangci-lint/v2/pkg/result/processors
 github.com/golangci/golangci-lint/v2/pkg/timeutils
-# github.com/golangci/golines v0.0.0-20250821215611-d4663ad2c370
-## explicit; go 1.22.0
+# github.com/golangci/golines v0.0.0-20251007222634-89eb1129f7ef
+## explicit; go 1.24.0
 github.com/golangci/golines
+github.com/golangci/golines/internal/diff
+github.com/golangci/golines/internal/formatter
+github.com/golangci/golines/shorten
+github.com/golangci/golines/shorten/internal/annotation
+github.com/golangci/golines/shorten/internal/graph
+github.com/golangci/golines/shorten/internal/tags
 # github.com/golangci/misspell v0.7.0
 ## explicit; go 1.23.0
 github.com/golangci/misspell
@@ -594,6 +606,9 @@ github.com/ldez/gomoddirectives
 ## explicit; go 1.24.0
 github.com/ldez/grignotin/goenv
 github.com/ldez/grignotin/gomod
+# github.com/ldez/structtags v0.6.1
+## explicit; go 1.24.0
+github.com/ldez/structtags/parser
 # github.com/ldez/tagliatelle v0.7.2
 ## explicit; go 1.23.0
 github.com/ldez/tagliatelle
@@ -935,6 +950,9 @@ github.com/uudashr/iface/unused
 # github.com/xen0n/gosmopolitan v1.3.0
 ## explicit; go 1.23.0
 github.com/xen0n/gosmopolitan
+# github.com/xhit/go-str2duration/v2 v2.1.0
+## explicit; go 1.13
+github.com/xhit/go-str2duration/v2
 # github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
 ## explicit; go 1.19
 github.com/xo/terminfo
@@ -1005,8 +1023,12 @@ golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 # golang.org/x/sys v0.36.0
 ## explicit; go 1.24.0
+golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+# golang.org/x/term v0.35.0
+## explicit; go 1.24.0
+golang.org/x/term
 # golang.org/x/text v0.29.0
 ## explicit; go 1.24.0
 golang.org/x/text/encoding
