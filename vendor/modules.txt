@@ -590,7 +590,7 @@ github.com/kkHAIKE/contextcheck
 # github.com/kulti/thelper v0.7.1
 ## explicit; go 1.24.0
 github.com/kulti/thelper/pkg/analyzer
-# github.com/kunwardeep/paralleltest v1.0.14
+# github.com/kunwardeep/paralleltest v1.0.15
 ## explicit; go 1.23.0
 github.com/kunwardeep/paralleltest/pkg/paralleltest
 # github.com/lasiar/canonicalheader v1.1.2
