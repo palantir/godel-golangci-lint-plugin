@@ -73,7 +73,7 @@ func WithLogger(logger Logger) Options {
 type Shortener struct {
 	config *Config
 
-	cs *comments.Shortener
+	commentsShortener *comments.Shortener
 
 	logger Logger
 }
@@ -90,7 +90,7 @@ func NewShortener(config *Config, opts ...Options) *Shortener {
 	}
 
 	if config.ShortenComments {
-		s.cs = &comments.Shortener{
+		s.commentsShortener = &comments.Shortener{
 			MaxLen: config.MaxLen,
 			TabLen: config.TabLen,
 		}
@@ -120,21 +120,9 @@ func (s *Shortener) Process(content []byte) ([]byte, error) {
 
 		// Annotate all long lines
 		lines := strings.Split(string(content), "\n")
-		annotatedLines, linesToShorten := s.annotateLongLines(lines)
+		annotatedLines, nbLinesToShorten := s.annotateLongLines(lines)
 
-		var stop bool
-
-		if linesToShorten == 0 {
-			if round == 0 {
-				if !s.config.ReformatTags || !tags.HasMultipleTags(lines) {
-					stop = true
-				}
-			} else {
-				stop = true
-			}
-		}
-
-		if stop {
+		if !s.shouldContinue(nbLinesToShorten, round, lines) {
 			s.logger.Debug("nothing more to shorten or reformat, stopping")
 
 			break
@@ -155,10 +143,8 @@ func (s *Shortener) Process(content []byte) ([]byte, error) {
 			}
 		}
 
-		// Process the file starting at the top-level declarations
-		for _, decl := range result.Decls {
-			s.formatNode(decl)
-		}
+		// Process the file.
+		s.formatFile(result)
 
 		// Materialize output
 		output := bytes.NewBuffer([]byte{})
@@ -183,8 +169,8 @@ func (s *Shortener) Process(content []byte) ([]byte, error) {
 		content = removeAnnotations(content)
 	}
 
-	if s.cs != nil {
-		content = s.cs.Process(content)
+	if s.commentsShortener != nil {
+		content = s.commentsShortener.Process(content)
 	}
 
 	// Do the final round of non-line-length-aware formatting after we've fixed up the comments
@@ -194,6 +180,16 @@ func (s *Shortener) Process(content []byte) ([]byte, error) {
 	}
 
 	return content, nil
+}
+
+// shouldContinue returns true:
+// if there are lines to shorten,
+// or if this is the first round (0),
+// and the option to reformat struct tags is enabled,
+// and there are struct tags with multiple entries.
+func (s *Shortener) shouldContinue(nbLinesToShorten, round int, lines []string) bool {
+	return nbLinesToShorten > 0 ||
+		round == 0 && s.config.ReformatTags && tags.HasMultipleEntries(lines)
 }
 
 func (s *Shortener) createDot(result dst.Node) error {
