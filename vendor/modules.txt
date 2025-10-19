@@ -501,7 +501,7 @@ github.com/golangci/golangci-lint/v2/pkg/report
 github.com/golangci/golangci-lint/v2/pkg/result
 github.com/golangci/golangci-lint/v2/pkg/result/processors
 github.com/golangci/golangci-lint/v2/pkg/timeutils
-# github.com/golangci/golines v0.0.0-20251017153718-fe0206ed71af
+# github.com/golangci/golines v0.0.0-20251018232526-10950882adb0
 ## explicit; go 1.24.0
 github.com/golangci/golines
 github.com/golangci/golines/internal/diff
