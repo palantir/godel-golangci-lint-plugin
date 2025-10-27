@@ -78,60 +78,72 @@ func handleBeginTransactionCall(call *ast.CallExpr, pass *analysis.Pass, stack [
 	}
 
 	diag := analysis.Diagnostic{
-		Pos:     call.Pos(),
+		Pos:     call.Args[2].Pos(),
 		Message: msgMissingAllowImplicit,
 	}
 
 	// Normalize the 3rd argument by unwrapping parentheses
 	arg := unwrapParens(call.Args[2])
 
+	if shouldReportMissingAllowImplicit(arg, pass, stack, call.Pos()) {
+		pass.Report(diag)
+	}
+}
+
+// shouldReportMissingAllowImplicit returns true when the provided 3rd argument
+// expression should trigger the "missing AllowImplicit" diagnostic, and false
+// when the argument is known to have AllowImplicit set (or when we must stay
+// conservative and avoid reporting).
+func shouldReportMissingAllowImplicit(
+	arg ast.Expr,
+	pass *analysis.Pass,
+	stack []ast.Node,
+	callPos token.Pos,
+) bool {
 	switch optsExpr := arg.(type) {
 	case *ast.Ident:
+		// direct identifier or nil
 		if isNilIdent(optsExpr) {
-			pass.Report(diag)
-
-			return
+			return true
 		}
 
-		if hasAllowImplicitForIdent(optsExpr, pass, stack, call.Pos()) {
-			return
-		}
+		return !hasAllowImplicitForIdent(optsExpr, pass, stack, callPos)
 
-		pass.Report(diag)
 	case *ast.UnaryExpr:
-		// &CompositeLit or &ident
+		// &CompositeLit or &ident or &index
 		if has, ok := compositeAllowsImplicit(optsExpr); ok {
-			if !has {
-				pass.Report(diag)
-			}
-
-			return
+			return !has
 		}
-
 		// not a composite literal, try &ident
 		if id, ok := optsExpr.X.(*ast.Ident); ok {
-			if hasAllowImplicitForIdent(id, pass, stack, call.Pos()) {
-				return
-			}
-
-			pass.Report(diag)
+			return !hasAllowImplicitForIdent(id, pass, stack, callPos)
 		}
+		// not &ident, try &index (e.g., &arr[i])
+		if idx, ok := optsExpr.X.(*ast.IndexExpr); ok {
+			return !hasAllowImplicitForIndex(idx, pass, stack, callPos)
+		}
+		// Unknown &shape: stay conservative (do not report)
+		return false
+
 	case *ast.SelectorExpr:
 		// s.opts (or nested) passed as options
-		if hasAllowImplicitForSelector(optsExpr, pass, stack, call.Pos()) {
-			return
-		}
+		return !hasAllowImplicitForSelector(optsExpr, pass, stack, callPos)
 
-		pass.Report(diag)
+	case *ast.IndexExpr:
+		// opts passed as an indexed element, e.g., arr[i]
+		return !hasAllowImplicitForIndex(optsExpr, pass, stack, callPos)
+
 	case *ast.CallExpr:
 		// Typed conversion like (*arangodb.BeginTransactionOptions)(nil)
 		if isTypeConversionToTxnOptionsPtrNil(optsExpr, pass) {
-			pass.Report(diag)
-
-			return
+			return true
 		}
 		// For other calls (factory/helpers), we stay conservative to avoid false positives.
+		return false
 	}
+
+	// Default: unknown expression shapes — stay conservative and do not report.
+	return false
 }
 
 func unwrapParens(arg ast.Expr) ast.Expr {
@@ -217,7 +229,26 @@ func hasAllowImplicitForSelector(
 	stack []ast.Node,
 	callPos token.Pos,
 ) bool {
+	// Special case: selector rooted at an index expression, e.g., arr[i].opts.
+	// In this case we must match both the base array/slice object and the specific index.
+	if innerIdx, ok := sel.X.(*ast.IndexExpr); ok {
+		blocks := ancestorBlocks(stack)
+
+		return scanPriorStatements(blocks, callPos, func(stmt ast.Stmt) bool {
+			return setsAllowImplicitForIndex(stmt, innerIdx, pass)
+		})
+	}
+
+	// Try to resolve the root identifier normally (handles ident, parens, star, chained selectors)
 	root := rootIdent(sel)
+
+	// Fallback: selector rooted indirectly via slice/index (e.g., arr[1:].opts)
+	if root == nil {
+		if innerIdx, ok := sel.X.(*ast.IndexExpr); ok {
+			root = rootIdent(innerIdx.X)
+		}
+	}
+
 	if root == nil {
 		return false
 	}
@@ -252,13 +283,29 @@ func setsAllowImplicitForObjectInAssign(stmt ast.Stmt, obj types.Object, pass *a
 			continue
 		}
 
-		r := rootIdent(sel.X)
-		if r == nil {
+		// Try standard root resolution first (ident, parens, star, chained selectors)
+		if r := rootIdent(sel.X); r != nil {
+			if pass.TypesInfo.ObjectOf(r) == obj {
+				return true
+			}
+
+			// Not the same object; proceed to next LHS
 			continue
 		}
 
-		if pass.TypesInfo.ObjectOf(r) == obj {
-			return true
+		// Handle index expression roots like arr[i].AllowImplicit
+		if idx, ok := sel.X.(*ast.IndexExpr); ok {
+			if root := rootIdent(idx.X); root != nil && pass.TypesInfo.ObjectOf(root) == obj {
+				return true
+			}
+		}
+		// Handle nested selector rooted by an index expression, e.g., arr[i].opts.AllowImplicit
+		if innerSel, ok := sel.X.(*ast.SelectorExpr); ok {
+			if idx, ok := innerSel.X.(*ast.IndexExpr); ok {
+				if root := rootIdent(idx.X); root != nil && pass.TypesInfo.ObjectOf(root) == obj {
+					return true
+				}
+			}
 		}
 	}
 
@@ -461,6 +508,10 @@ func stmtSetsAllowImplicitForObj(stmt ast.Stmt, obj types.Object, pass *analysis
 		if handleForAllowImplicit(stmtNode, obj, pass) {
 			return true
 		}
+	case *ast.RangeStmt:
+		if handleRangeAllowImplicit(stmtNode, obj, pass) {
+			return true
+		}
 	case *ast.SwitchStmt:
 		if handleSwitchAllowImplicit(stmtNode, obj, pass) {
 			return true
@@ -470,6 +521,9 @@ func stmtSetsAllowImplicitForObj(stmt ast.Stmt, obj types.Object, pass *analysis
 	return false
 }
 
+// rootIdent returns the underlying identifier by peeling parens, stars,
+// selectors, index, and slice expressions. It is intended for cases where we
+// must resolve the base collection identifier behind arr[i], arr[1:], etc.
 func rootIdent(expr ast.Expr) *ast.Ident {
 	for {
 		switch typedExpr := expr.(type) {
@@ -480,7 +534,10 @@ func rootIdent(expr ast.Expr) *ast.Ident {
 		case *ast.StarExpr:
 			expr = typedExpr.X
 		case *ast.SelectorExpr:
-			// walk down the selector chain until we hit the root identifier
+			expr = typedExpr.X
+		case *ast.IndexExpr:
+			expr = typedExpr.X
+		case *ast.SliceExpr:
 			expr = typedExpr.X
 		default:
 			return nil
@@ -639,6 +696,118 @@ func handleSwitchAllowImplicit(
 		if clause, ok := cc.(*ast.CaseClause); ok {
 			for _, st := range clause.Body {
 				if stmtSetsAllowImplicitForObj(st, obj, pass) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// handleRangeAllowImplicit scans a range statement's body for assignments or initializations
+// that set AllowImplicit for the given object. Mirrors ForStmt handling semantics.
+func handleRangeAllowImplicit(stmtNode *ast.RangeStmt, obj types.Object, pass *analysis.Pass) bool {
+	if stmtNode == nil || stmtNode.Body == nil {
+		return false
+	}
+
+	for _, st := range stmtNode.Body.List {
+		if stmtSetsAllowImplicitForObj(st, obj, pass) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// hasAllowImplicitForIndex checks if an index expression (e.g., arr[i] or arr[i].<field> via nested selectors)
+// refers to an array/slice element whose AllowImplicit field was set prior to the call position within
+// the nearest or any ancestor block. We require both the same base identifier and the same index (when resolvable).
+func hasAllowImplicitForIndex(
+	idx *ast.IndexExpr,
+	pass *analysis.Pass,
+	stack []ast.Node,
+	callPos token.Pos,
+) bool {
+	if idx == nil {
+		return false
+	}
+
+	blocks := ancestorBlocks(stack)
+
+	return scanPriorStatements(blocks, callPos, func(stmt ast.Stmt) bool {
+		return setsAllowImplicitForIndex(stmt, idx, pass)
+	})
+}
+
+// sameIndex reports whether two index expressions refer to the same constant index.
+// It only returns true for simple integer literals with the same value. For other
+// shapes it returns false (unknown), keeping analysis conservative.
+func sameIndex(a, exprB ast.Expr) bool {
+	a = unwrapParens(a)
+	exprB = unwrapParens(exprB)
+
+	litA, oka := a.(*ast.BasicLit)
+
+	litB, okb := exprB.(*ast.BasicLit)
+	if !oka || !okb {
+		return false
+	}
+
+	if litA.Kind != token.INT || litB.Kind != token.INT {
+		return false
+	}
+
+	return litA.Value == litB.Value
+}
+
+// sameIndexBase reports whether two index expressions share the same base identifier
+// (array/slice variable) and the same constant index.
+func sameIndexBase(idxA, idxB *ast.IndexExpr, pass *analysis.Pass) bool {
+	baseA := rootIdent(idxA.X)
+	baseB := rootIdent(idxB.X)
+
+	if baseA == nil || baseB == nil {
+		return false
+	}
+
+	if pass.TypesInfo.ObjectOf(baseA) != pass.TypesInfo.ObjectOf(baseB) {
+		return false
+	}
+
+	return sameIndex(idxA.Index, idxB.Index)
+}
+
+// setsAllowImplicitForIndex reports true if stmt assigns to AllowImplicit for the
+// specific element referenced by target (matching both base and index).
+func setsAllowImplicitForIndex(stmt ast.Stmt, target *ast.IndexExpr, pass *analysis.Pass) bool {
+	assign, ok := stmt.(*ast.AssignStmt)
+	if !ok {
+		return false
+	}
+
+	for _, lhs := range assign.Lhs {
+		sel, ok := lhs.(*ast.SelectorExpr)
+		if !ok {
+			continue
+		}
+
+		if !isAllowImplicitSelector(sel) {
+			continue
+		}
+
+		// Direct element field assignment: arr[i].AllowImplicit = ...
+		if idx, ok := sel.X.(*ast.IndexExpr); ok {
+			if sameIndexBase(idx, target, pass) {
+				return true
+			}
+		}
+
+		// Nested field after element selection: arr[i].opts.AllowImplicit = ...
+		if innerSel, ok := sel.X.(*ast.SelectorExpr); ok {
+			if idx, ok := innerSel.X.(*ast.IndexExpr); ok {
+				if sameIndexBase(idx, target, pass) {
 					return true
 				}
 			}
