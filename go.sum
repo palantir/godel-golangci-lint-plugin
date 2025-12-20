@@ -195,8 +195,8 @@ github.com/golangci/gofmt v0.0.0-20250704145412-3e58ba0443c6 h1:jlKy3uQkETB3zMBK
 github.com/golangci/gofmt v0.0.0-20250704145412-3e58ba0443c6/go.mod h1:OyaRySOXorMn8zJqFku8YsKptIhPkANyKKTMC+rqMCs=
 github.com/golangci/golangci-lint/v2 v2.7.2 h1:AhBC+YeEueec4AGlIbvPym5C70Thx0JykIqXbdIXWx0=
 github.com/golangci/golangci-lint/v2 v2.7.2/go.mod h1:pDijleoBu7e8sejMqyZ3L5n6geqe+cVvOAz2QImqqVc=
-github.com/golangci/golines v0.0.0-20251214142620-63639e8a3e5b h1:z37J4ChizUCLcU9kkOUyshZZBsB+ItROu32dtpPIrGs=
-github.com/golangci/golines v0.0.0-20251214142620-63639e8a3e5b/go.mod h1:gf555vPG2Ia7mmy2mzmhVQbVjuK8Orw0maR1G4vVAAQ=
+github.com/golangci/golines v0.14.0 h1:xt9d3RKBjhasA3qpoXs99J2xN2t6eBlpLHt0TrgyyXc=
+github.com/golangci/golines v0.14.0/go.mod h1:gf555vPG2Ia7mmy2mzmhVQbVjuK8Orw0maR1G4vVAAQ=
 github.com/golangci/misspell v0.7.0 h1:4GOHr/T1lTW0hhR4tgaaV1WS/lJ+ncvYCoFKmqJsj0c=
 github.com/golangci/misspell v0.7.0/go.mod h1:WZyyI2P3hxPY2UVHs3cS8YcllAeyfquQcKfdeE9AFVg=
 github.com/golangci/plugin-module-register v0.1.2 h1:e5WM6PO6NIAEcij3B053CohVp3HIYbzSuP53UAYgOpg=
