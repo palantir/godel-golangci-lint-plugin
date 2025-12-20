@@ -1,17 +1,19 @@
-[![golines test](https://github.com/golangci/golines/actions/workflows/test.yml/badge.svg)](https://github.com/golangci/golines/actions/workflows/test.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/golangci/golines)](https://goreportcard.com/report/github.com/golangci/golines)
-[![GoDoc](https://godoc.org/github.com/golangci/golines?status.svg)](https://godoc.org/github.com/golangci/golines)
-
-# golines
+<div align="center">
+  <img alt="golines logo" src=".assets/golines-logo.svg">
+</div>
 
 Golines is a Go code formatter that shortens long lines,
 in addition to all the formatting fixes done by [`gofmt`](https://golang.org/cmd/gofmt/).
+
+[![golines test](https://github.com/golangci/golines/actions/workflows/test.yml/badge.svg)](https://github.com/golangci/golines/actions/workflows/test.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/golangci/golines)](https://goreportcard.com/report/github.com/golangci/golines)
+[![GoDoc](https://godoc.org/github.com/golangci/golines?status.svg)](https://godoc.org/github.com/golangci/golines)
 
 ## History
 
 This repository is a fork of [segmentio/golines](https://github.com/segmentio/golines/).
 
-The original repository will probably be archived in Q4 2025.
+The original repository has been archived the [2025-12-19](https://github.com/segmentio/golines?tab=readme-ov-file#maintenance--archiving).
 
 ## Usage
 
@@ -227,3 +229,7 @@ For each input source file, `golines` runs through the following process:
   `stdout` or the source file
 
 See [this blog post](https://yolken.net/blog/cleaner-go-code-golines) for more technical details.
+
+## Thanks
+
+Thanks to [@yolken](https://github.com/yolken) the original author of this tool.
