@@ -303,8 +303,8 @@ github.com/goccy/go-yaml/parser
 github.com/goccy/go-yaml/printer
 github.com/goccy/go-yaml/scanner
 github.com/goccy/go-yaml/token
-# github.com/godoc-lint/godoc-lint v0.10.2
-## explicit; go 1.24
+# github.com/godoc-lint/godoc-lint v0.11.0
+## explicit; go 1.24.0
 github.com/godoc-lint/godoc-lint/pkg/analysis
 github.com/godoc-lint/godoc-lint/pkg/check
 github.com/godoc-lint/godoc-lint/pkg/check/deprecated
@@ -314,6 +314,8 @@ github.com/godoc-lint/godoc-lint/pkg/check/pkg_doc
 github.com/godoc-lint/godoc-lint/pkg/check/require_doc
 github.com/godoc-lint/godoc-lint/pkg/check/shared
 github.com/godoc-lint/godoc-lint/pkg/check/start_with_name
+github.com/godoc-lint/godoc-lint/pkg/check/stdlib_doclink
+github.com/godoc-lint/godoc-lint/pkg/check/stdlib_doclink/internal
 github.com/godoc-lint/godoc-lint/pkg/compose
 github.com/godoc-lint/godoc-lint/pkg/config
 github.com/godoc-lint/godoc-lint/pkg/inspect
