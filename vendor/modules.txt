@@ -87,8 +87,8 @@ github.com/alecthomas/units
 # github.com/alexkohler/nakedret/v2 v2.0.6
 ## explicit; go 1.23.0
 github.com/alexkohler/nakedret/v2
-# github.com/alexkohler/prealloc v1.0.0
-## explicit; go 1.15
+# github.com/alexkohler/prealloc v1.0.1
+## explicit; go 1.24.0
 github.com/alexkohler/prealloc/pkg
 # github.com/alfatraining/structtag v1.0.0
 ## explicit; go 1.22
