@@ -140,6 +140,9 @@ func (ctx *analysisContext) handleFileNode(node *ast.File) {
 	if ctx.cfg.SQLInjectionDetectionEnabled {
 		AnalyzeSQLInjection(ctx.pass, node)
 	}
+	if ctx.cfg.TxLeakDetectionEnabled {
+		AnalyzeTxLeaks(ctx.pass, node)
+	}
 }
 
 // handleCallExpr processes function/method call expressions
@@ -391,7 +394,6 @@ func getDetailedWarningMessage(context string) string {
 		return defaultWarningMessage
 	}
 }
-
 
 // IsRuleEnabledExported checks if a rule is enabled in the configuration.
 // A rule is enabled if it exists in the Rules map and its severity is not "ignore".
