@@ -848,13 +848,15 @@ github.com/sashamelentyev/interfacebloat/pkg/analyzer
 ## explicit; go 1.23.0
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
-# github.com/securego/gosec/v2 v2.22.11
+# github.com/securego/gosec/v2 v2.23.0
 ## explicit; go 1.24.0
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/analyzers
 github.com/securego/gosec/v2/cwe
+github.com/securego/gosec/v2/internal/ssautil
 github.com/securego/gosec/v2/issue
 github.com/securego/gosec/v2/rules
+github.com/securego/gosec/v2/taint
 # github.com/sirupsen/logrus v1.9.4
 ## explicit; go 1.17
 github.com/sirupsen/logrus
@@ -1096,6 +1098,9 @@ golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/ast/edge
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/buildutil
+golang.org/x/tools/go/callgraph
+golang.org/x/tools/go/callgraph/cha
+golang.org/x/tools/go/callgraph/internal/chautil
 golang.org/x/tools/go/cfg
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/cgo
