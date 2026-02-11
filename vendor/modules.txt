@@ -512,7 +512,7 @@ github.com/golangci/golines/shorten/internal/annotation
 github.com/golangci/golines/shorten/internal/comments
 github.com/golangci/golines/shorten/internal/graph
 github.com/golangci/golines/shorten/internal/tags
-# github.com/golangci/misspell v0.7.0
+# github.com/golangci/misspell v0.8.0
 ## explicit; go 1.23.0
 github.com/golangci/misspell
 # github.com/golangci/plugin-module-register v0.1.2
