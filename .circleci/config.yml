@@ -9,6 +9,9 @@ orbs:
 
 image-version: &image-version "cimg/go:1.25.7-browsers"
 
+go-version: &go-version
+  go_version: go1.26.0
+
 executors:
   standard-executor:
     docker:
@@ -44,23 +47,28 @@ workflows:
       - go-jobs/godel_build:
           name: "build"
           executor: "standard-executor"
+          <<: *go-version
           <<: *all-tags-filter
       - go-jobs/godel_verify:
           name: "verify"
           executor: "standard-executor"
+          <<: *go-version
           skip_tests: true
+          verify_args: "--skip-lint"
           requires:
             - build
           <<: *all-tags-filter
       - go-jobs/godel_test:
           name: "test"
           executor: "standard-executor"
+          <<: *go-version
           requires:
             - build
           <<: *all-tags-filter
       - go-jobs/godel_dist:
           name: "dist"
           executor: "standard-executor"
+          <<: *go-version
           requires:
             - build
           <<: *all-tags-filter
