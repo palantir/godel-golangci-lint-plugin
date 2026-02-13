@@ -54,7 +54,6 @@ workflows:
           executor: "standard-executor"
           <<: *go-version
           skip_tests: true
-          verify_args: "--skip-lint"
           requires:
             - build
           <<: *all-tags-filter
