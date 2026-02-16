@@ -183,7 +183,7 @@ github.com/ckaznocha/intrange
 # github.com/clipperhouse/displaywidth v0.10.0
 ## explicit; go 1.18
 github.com/clipperhouse/displaywidth
-# github.com/clipperhouse/uax29/v2 v2.6.0
+# github.com/clipperhouse/uax29/v2 v2.7.0
 ## explicit; go 1.18
 github.com/clipperhouse/uax29/v2/graphemes
 # github.com/curioswitch/go-reassign v0.3.0
