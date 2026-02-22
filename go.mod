@@ -65,7 +65,7 @@ require (
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/cheggaaa/pb/v3 v3.1.7 // indirect
 	github.com/ckaznocha/intrange v0.3.1 // indirect
-	github.com/clipperhouse/displaywidth v0.10.0 // indirect
+	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/curioswitch/go-reassign v0.3.0 // indirect
 	github.com/daixiang0/gci v0.13.7 // indirect
