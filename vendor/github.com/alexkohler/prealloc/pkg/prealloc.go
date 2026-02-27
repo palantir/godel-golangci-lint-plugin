@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/format"
 	"go/token"
+	"go/types"
 	"strconv"
 
 	"golang.org/x/tools/go/analysis"
@@ -31,27 +32,27 @@ type returnsVisitor struct {
 	simple            bool
 	includeRangeLoops bool
 	includeForLoops   bool
+	pass              *analysis.Pass
 	// visitor fields
 	sliceDeclarations []*sliceDeclaration
 	sliceAppends      []*sliceAppend
 	loopVars          []ast.Expr
-	preallocHints     []analysis.Diagnostic
 	level             int  // Current nesting level. Loops do not increment the level.
 	hasReturn         bool // Whether a return statement has been found. Slices appended before and after a return are disqualified in simple mode.
 	hasGoto           bool // Whether a goto statement has been found. Goto disqualifies pending and subsequent slices in simple mode.
 	hasBranch         bool // Whether a branch statement has been found. Loops with branch statements are unsupported in simple mode.
 }
 
-func Check(files []*ast.File, simple, includeRangeLoops, includeForLoops bool) []analysis.Diagnostic {
+func Check(pass *analysis.Pass, simple, includeRangeLoops, includeForLoops bool) {
 	retVis := &returnsVisitor{
 		simple:            simple,
 		includeRangeLoops: includeRangeLoops,
 		includeForLoops:   includeForLoops,
+		pass:              pass,
 	}
-	for _, f := range files {
+	for _, f := range pass.Files {
 		ast.Walk(retVis, f)
 	}
-	return retVis.preallocHints
 }
 
 func (v *returnsVisitor) Visit(node ast.Node) ast.Visitor {
@@ -118,7 +119,7 @@ func (v *returnsVisitor) Visit(node ast.Node) ast.Visitor {
 					buf.Truncate(undo)
 				}
 			}
-			v.preallocHints = append(v.preallocHints, analysis.Diagnostic{
+			v.pass.Report(analysis.Diagnostic{
 				Pos:     sliceDecl.pos,
 				Message: buf.String(),
 			})
@@ -139,15 +140,21 @@ func (v *returnsVisitor) Visit(node ast.Node) ast.Visitor {
 		return nil
 
 	case *ast.ValueSpec:
-		_, isArrayType := inferExprType(s.Type).(*ast.ArrayType)
+		var isArrayOrSlice bool
+		if t := v.pass.TypesInfo.TypeOf(s.Type); t != nil {
+			switch t.Underlying().(type) {
+			case *types.Array, *types.Slice:
+				isArrayOrSlice = true
+			}
+		}
 		for i, name := range s.Names {
 			var lenExpr ast.Expr
 			if i >= len(s.Values) {
-				if !isArrayType {
+				if !isArrayOrSlice {
 					continue
 				}
 				lenExpr = intExpr(0)
-			} else if lenExpr = isCreateArray(s.Values[i]); lenExpr == nil {
+			} else if lenExpr = v.isCreateArray(s.Values[i]); lenExpr == nil {
 				if id, ok := s.Values[i].(*ast.Ident); !ok || id.Name != "nil" {
 					continue
 				}
@@ -176,7 +183,7 @@ func (v *returnsVisitor) Visit(node ast.Node) ast.Visitor {
 			if !ok {
 				continue
 			}
-			if lenExpr := isCreateArray(s.Rhs[i]); lenExpr != nil {
+			if lenExpr := v.isCreateArray(s.Rhs[i]); lenExpr != nil {
 				v.sliceDeclarations = append(v.sliceDeclarations, &sliceDeclaration{name: ident.Name, pos: s.Pos(), level: v.level, lenExpr: lenExpr})
 			} else {
 				declIdx := -1
@@ -234,7 +241,7 @@ func (v *returnsVisitor) Visit(node ast.Node) ast.Visitor {
 					return v
 				}
 
-				countExpr := appendCount(s)
+				countExpr := v.appendCount(s)
 				if countExpr != nil && (hasAny(countExpr, v.loopVars) || hasVarReference(countExpr, sliceDecl.name)) {
 					// exclude slice if append count references it
 					sliceDecl.exclude = true
@@ -438,12 +445,15 @@ func (v *returnsVisitor) walkSwitchSelect(body *ast.BlockStmt) ast.Visitor {
 	return nil
 }
 
-func isCreateArray(expr ast.Expr) ast.Expr {
+func (v *returnsVisitor) isCreateArray(expr ast.Expr) ast.Expr {
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
 		// []any{...}
-		if _, ok := inferExprType(e.Type).(*ast.ArrayType); ok {
-			return intExpr(len(e.Elts))
+		if t := v.pass.TypesInfo.TypeOf(e); t != nil {
+			switch t.Underlying().(type) {
+			case *types.Array, *types.Slice:
+				return intExpr(len(e.Elts))
+			}
 		}
 	case *ast.CallExpr:
 		switch len(e.Args) {
@@ -453,8 +463,10 @@ func isCreateArray(expr ast.Expr) ast.Expr {
 			if !ok || arg.Name != "nil" {
 				return nil
 			}
-			if _, ok = inferExprType(e.Fun).(*ast.ArrayType); ok {
-				return intExpr(0)
+			if t := v.pass.TypesInfo.TypeOf(e.Fun); t != nil {
+				if _, ok := t.Underlying().(*types.Slice); ok {
+					return intExpr(0)
+				}
 			}
 		case 2:
 			// make([]any, n)
@@ -480,37 +492,41 @@ func (v *returnsVisitor) rangeLoopCount(stmt *ast.RangeStmt) (ast.Expr, bool) {
 			}
 		} else if len(call.Args) >= 2 {
 			if funIdent, ok := call.Fun.(*ast.Ident); ok && funIdent.Name == "append" {
-				return addIntExpr(sliceLength(call.Args[0]), appendCount(call)), true
+				return addIntExpr(v.sliceLength(call.Args[0]), v.appendCount(call)), true
 			}
 		}
 	}
 
-	xType := inferExprType(x)
+	xType := v.pass.TypesInfo.TypeOf(x)
+	if xType != nil {
+		xType = xType.Underlying()
+	}
 
 	switch xType := xType.(type) {
-	case *ast.ChanType, *ast.FuncType:
+	case *types.Chan, *types.Signature:
 		return nil, false
-	case *ast.ArrayType:
+	case *types.Array:
+		if _, ok := stmt.X.(*ast.CompositeLit); ok && xType.Len() >= 0 {
+			return intExpr(int(xType.Len())), true
+		}
+	case *types.Slice:
 		if lit, ok := stmt.X.(*ast.CompositeLit); ok {
-			if xType.Len != nil {
-				return xType.Len, true
-			}
 			return intExpr(len(lit.Elts)), true
 		}
-	case *ast.MapType:
+	case *types.Map:
 		if lit, ok := x.(*ast.CompositeLit); ok {
 			return intExpr(len(lit.Elts)), true
 		}
-	case *ast.StarExpr:
-		if xType, ok := xType.X.(*ast.ArrayType); !ok || xType.Len == nil {
+	case *types.Pointer:
+		if xType, ok := xType.Elem().(*types.Array); !ok {
 			return nil, true
 		} else if unary, ok := x.(*ast.UnaryExpr); ok && unary.Op == token.AND {
-			if _, ok := unary.X.(*ast.CompositeLit); ok {
-				return xType.Len, true
+			if _, ok := unary.X.(*ast.CompositeLit); ok && xType.Len() >= 0 {
+				return intExpr(int(xType.Len())), true
 			}
 		}
-	case *ast.Ident:
-		if xType.Name == "string" {
+	case *types.Basic:
+		if xType.Info()&types.IsString != 0 {
 			if lit, ok := x.(*ast.BasicLit); ok && lit.Kind == token.STRING {
 				if str, err := strconv.Unquote(lit.Value); err == nil {
 					return intExpr(len(str)), true
@@ -525,12 +541,11 @@ func (v *returnsVisitor) rangeLoopCount(stmt *ast.RangeStmt) (ast.Expr, bool) {
 		return nil, true
 	}
 
-	if ident, ok := xType.(*ast.Ident); ok {
-		switch ident.Name {
-		case "byte", "rune", "int", "int8", "int16", "int32", "int64",
-			"uint", "uint8", "uint16", "uint32", "uint64", "uintptr":
+	if xType, ok := xType.(*types.Basic); ok {
+		switch {
+		case xType.Info()&types.IsInteger != 0:
 			return x, true
-		case "string":
+		case xType.Info()&types.IsString != 0:
 		default:
 			return nil, true
 		}
@@ -550,14 +565,14 @@ func (v *returnsVisitor) rangeLoopCount(stmt *ast.RangeStmt) (ast.Expr, bool) {
 	return &ast.CallExpr{Fun: ast.NewIdent("len"), Args: []ast.Expr{x}}, true
 }
 
-func appendCount(expr *ast.CallExpr) ast.Expr {
+func (v *returnsVisitor) appendCount(expr *ast.CallExpr) ast.Expr {
 	if expr.Ellipsis.IsValid() {
-		return sliceLength(expr.Args[1])
+		return v.sliceLength(expr.Args[1])
 	}
 	return intExpr(len(expr.Args) - 1)
 }
 
-func sliceLength(expr ast.Expr) ast.Expr {
+func (v *returnsVisitor) sliceLength(expr ast.Expr) ast.Expr {
 	if call, ok := expr.(*ast.CallExpr); ok {
 		if len(call.Args) == 1 {
 			if _, ok := call.Fun.(*ast.ArrayType); ok {
@@ -565,18 +580,22 @@ func sliceLength(expr ast.Expr) ast.Expr {
 			}
 		} else if len(call.Args) >= 2 {
 			if funIdent, ok := call.Fun.(*ast.Ident); ok && funIdent.Name == "append" {
-				return addIntExpr(sliceLength(call.Args[0]), appendCount(call))
+				return addIntExpr(v.sliceLength(call.Args[0]), v.appendCount(call))
 			}
 		}
 	}
 
-	switch xType := inferExprType(expr).(type) {
-	case *ast.ArrayType:
+	xType := v.pass.TypesInfo.TypeOf(expr)
+	if xType == nil {
+		return nil
+	}
+	switch xType := xType.Underlying().(type) {
+	case *types.Array, *types.Slice:
 		if lit, ok := expr.(*ast.CompositeLit); ok {
 			return intExpr(len(lit.Elts))
 		}
-	case *ast.Ident:
-		if xType.Name == "string" {
+	case *types.Basic:
+		if xType.Info()&types.IsString != 0 {
 			if lit, ok := expr.(*ast.BasicLit); ok && lit.Kind == token.STRING {
 				if str, err := strconv.Unquote(lit.Value); err == nil {
 					return intExpr(len(str))
@@ -617,104 +636,96 @@ func (v *returnsVisitor) forLoopCount(stmt *ast.ForStmt) (ast.Expr, bool) {
 		return nil, false
 	}
 
-	var postIdent *ast.Ident
-	var reverse bool
-	var step ast.Expr
-	switch s := stmt.Post.(type) {
-	case *ast.IncDecStmt:
-		var ok bool
-		if postIdent, ok = s.X.(*ast.Ident); !ok {
-			return nil, true
-		}
-		reverse = s.Tok == token.DEC
-		step = intExpr(1)
-	case *ast.AssignStmt:
-		if len(s.Lhs) != 1 || len(s.Rhs) != 1 {
-			return nil, true
-		}
-		var ok bool
-		if postIdent, ok = s.Lhs[0].(*ast.Ident); !ok {
-			return nil, true
-		}
-		step = s.Rhs[0]
-		switch s.Tok {
-		case token.ADD_ASSIGN:
-		case token.SUB_ASSIGN:
-			reverse = true
-		case token.MUL_ASSIGN, token.QUO_ASSIGN, token.REM_ASSIGN, token.SHL_ASSIGN, token.SHR_ASSIGN:
-			return nil, true
-		case token.ASSIGN:
-			if binary, ok := s.Rhs[0].(*ast.BinaryExpr); ok {
-				switch binary.Op {
-				case token.ADD:
-				case token.SUB:
-					reverse = true
-				default:
-					return nil, false
-				}
+	initAssign, ok := stmt.Init.(*ast.AssignStmt)
+	if !ok || len(initAssign.Lhs) != len(initAssign.Rhs) {
+		return nil, true
+	}
 
-				switch {
-				case exprEqual(binary.X, postIdent):
-					step = binary.Y
-				case exprEqual(binary.Y, postIdent):
-					step = binary.X
+	for i, lhs := range initAssign.Lhs {
+		initIdent, ok := lhs.(*ast.Ident)
+		if !ok {
+			continue
+		}
+
+		var reverse bool
+		var step ast.Expr
+		switch s := stmt.Post.(type) {
+		case *ast.IncDecStmt:
+			if isIdentName(s.X, initIdent.Name) {
+				reverse = s.Tok == token.DEC
+				step = intExpr(1)
+			}
+
+		case *ast.AssignStmt:
+			if len(s.Lhs) != len(s.Rhs) {
+				return nil, true
+			}
+
+			for i, lhs := range s.Lhs {
+				if !isIdentName(lhs, initIdent.Name) {
+					continue
+				}
+				switch s.Tok {
+				case token.ADD_ASSIGN, token.SUB_ASSIGN:
+					step = s.Rhs[i]
+					reverse = s.Tok == token.SUB_ASSIGN
+				case token.ASSIGN:
+					if rhsBinary, ok := s.Rhs[i].(*ast.BinaryExpr); ok {
+						reverse = s.Tok == token.SUB
+						if rhsBinary.Op == token.ADD || reverse {
+							if isIdentName(rhsBinary.X, initIdent.Name) {
+								step = rhsBinary.Y
+							} else if isIdentName(rhsBinary.Y, initIdent.Name) {
+								step = rhsBinary.X
+							}
+						}
+					} else {
+						return nil, false
+					}
 				default:
 					return nil, false
 				}
-			} else {
+				if step != nil {
+					break
+				}
+			}
+		}
+
+		if step == nil {
+			continue
+		}
+
+		lower := initAssign.Rhs[i]
+		if hasCall(lower) {
+			continue // NATO: this should trigger another attempt
+		}
+
+		upper, op := forLoopUpperBound(stmt.Cond, initIdent.Name)
+
+		if !reverse {
+			if op == token.GTR || op == token.GEQ {
 				return nil, false
 			}
-		default:
-			return nil, false
+		} else {
+			if op == token.LSS || op == token.LEQ {
+				return nil, false
+			}
+			lower, upper = upper, lower
 		}
-	default:
-		return nil, false
-	}
 
-	initStmt, ok := stmt.Init.(*ast.AssignStmt)
-	if !ok {
-		return nil, true
-	}
-
-	index := -1
-	for i := range initStmt.Lhs {
-		if ident, ok := initStmt.Lhs[i].(*ast.Ident); ok && ident.Name == postIdent.Name {
-			index = i
-			break
+		if op == token.LEQ || op == token.GEQ {
+			upper = incIntExpr(upper)
 		}
-	}
-	if index < 0 {
-		return nil, true
-	}
 
-	lower := initStmt.Rhs[index]
-	if hasCall(lower) {
-		return nil, true
-	}
-
-	upper, op := forLoopUpperBound(stmt.Cond, postIdent.Name)
-
-	if !reverse {
-		if op == token.GTR || op == token.GEQ {
-			return nil, false
+		countExpr, rounded := divIntExpr(subIntExpr(upper, lower), step)
+		if rounded {
+			// extra capacity in case non-unary step increment is rounded down
+			countExpr = incIntExpr(countExpr)
 		}
-	} else {
-		if op == token.LSS || op == token.LEQ {
-			return nil, false
-		}
-		lower, upper = upper, lower
+		return countExpr, true
 	}
 
-	if op == token.LEQ || op == token.GEQ {
-		upper = incIntExpr(upper)
-	}
-
-	countExpr, rounded := divIntExpr(subIntExpr(upper, lower), step)
-	if rounded {
-		// extra capacity in case non-unary step increment is rounded down
-		countExpr = incIntExpr(countExpr)
-	}
-	return countExpr, true
+	return nil, true
 }
 
 func forLoopUpperBound(expr ast.Expr, name string) (ast.Expr, token.Token) {
@@ -783,6 +794,11 @@ func forLoopUpperBound(expr ast.Expr, name string) (ast.Expr, token.Token) {
 	return nil, 0
 }
 
+func isIdentName(expr ast.Expr, name string) bool {
+	ident, ok := expr.(*ast.Ident)
+	return ok && ident.Name == name
+}
+
 func hasAny(node ast.Node, exprs []ast.Expr) bool {
 	var found bool
 	ast.Inspect(node, func(node ast.Node) bool {
@@ -819,6 +835,11 @@ func hasCall(expr ast.Expr) bool {
 					}
 				case "len", "cap", "real", "imag", "min", "max", "complex":
 					// allow cheap pure built-in functions
+					return true
+				}
+			case *ast.SelectorExpr:
+				// allow argument-less methods
+				if len(call.Args) == 0 {
 					return true
 				}
 			}
