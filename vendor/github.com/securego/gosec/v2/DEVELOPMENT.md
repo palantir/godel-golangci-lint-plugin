@@ -13,6 +13,9 @@
 			- [Sinks](#sinks)
 			- [Sanitizers](#sanitizers)
 		- [Common taint sources](#common-taint-sources)
+- [AI-generated rule workflow (Copilot)](#ai-generated-rule-workflow-copilot)
+- [AI-generated bug fix workflow (Copilot)](#ai-generated-bug-fix-workflow-copilot)
+- [AI-supported Go version update workflow (Copilot)](#ai-supported-go-version-update-workflow-copilot)
 - [Rule development utilities](#rule-development-utilities)
 - [SARIF types generation](#sarif-types-generation)
 - [Performance regression guard](#performance-regression-guard)
@@ -205,6 +208,116 @@ If data passes through a configured sanitizer, it is treated as safe for subsequ
 | Environment Variables | `os` | `Getenv` | `false` | `true` |
 | File Content | `bufio` | `Reader` | `true` | `false` |
 
+## AI-generated rule workflow (Copilot)
+
+This repository includes a reusable Copilot skill and prompt for creating new gosec rules from an issue description.
+
+- Skill file: `.github/skills/gosec-new-rule/SKILL.md`
+- Prompt file: `.github/prompts/create-gosec-rule.prompt.md`
+
+### Use via `/prompt` (recommended)
+
+1. In VS Code Copilot Chat, run `/prompt` and select **Create Gosec Rule**.
+2. Fill in the issue fields (`Summary`, repro steps, versions, environment, expected, actual).
+3. Submit the prompt.
+4. First response should only propose:
+	- rule ID
+	- implementation approach (SSA / taint / AST)
+	- relevance for Go `1.25` and `1.26`
+	- confirmation request
+5. Reply with explicit confirmation (for example: `Confirmed. Proceed with implementation.`).
+
+### Use the skill directly (without `/prompt`)
+
+Send this in Copilot Chat:
+
+```text
+Use the skill "Create New Gosec Rule" from .github/skills/gosec-new-rule/SKILL.md.
+```
+
+Then paste the same issue template fields and confirm after the proposal step.
+
+### If `/prompt` does not list the prompt
+
+1. Ensure the workspace root is this repository.
+2. Confirm the file exists at `.github/prompts/create-gosec-rule.prompt.md`.
+3. Reload VS Code window and start a new chat session.
+4. As fallback, open the prompt file and send its content directly in chat.
+
+## AI-generated bug fix workflow (Copilot)
+
+This repository also includes a Copilot skill and prompt for fixing bugs described in GitHub issues.
+
+- Skill file: `.github/skills/gosec-fix-issue/SKILL.md`
+- Prompt file: `.github/prompts/fix-gosec-bug-from-issue.prompt.md`
+
+### Use via `/prompt` (recommended)
+
+1. In VS Code Copilot Chat, run `/prompt` and select **Fix Gosec Bug From Issue**.
+2. Fill in at least the `GitHub issue URL` field (other fields are optional but useful).
+3. Submit the prompt.
+4. First response should only include:
+	- reproduction status on `master` (or clear blocker)
+	- root cause analysis
+	- detailed fix plan
+	- confirmation request
+5. Reply with explicit confirmation (for example: `Confirmed. Proceed with fix.`).
+
+### Use the skill directly (without `/prompt`)
+
+Send this in Copilot Chat:
+
+```text
+Use the skill "Fix Gosec Bug From Issue" from .github/skills/gosec-fix-issue/SKILL.md.
+```
+
+Then provide the GitHub issue URL and confirm after the analysis and plan step.
+
+### Expected implementation guardrails
+
+After confirmation, the workflow should:
+
+- keep the fix small and isolated to the problem
+- use idiomatic Go and good design
+- add positive and negative tests
+- add or update `testutils/` code samples when appropriate for reproducing/validating the issue
+- validate with build, tests, `golangci-lint`, and a `gosec` CLI run against a sample
+
+## AI-supported Go version update workflow (Copilot)
+
+This repository includes a Copilot skill and prompt to update supported Go versions to the latest patch versions of the two newest major Go series.
+
+- Skill file: `.github/skills/gosec-update-go-versions/SKILL.md`
+- Prompt file: `.github/prompts/update-supported-go-versions.prompt.md`
+
+### Use via `/prompt` (recommended)
+
+1. In VS Code Copilot Chat, run `/prompt` and select **Update Supported Go Versions**.
+2. Submit the prompt (no additional fields required).
+3. The workflow should:
+	- read `https://go.dev/doc/devel/release`
+	- detect latest two supported Go series and latest patch for each
+	- update all active repository locations where supported Go versions are configured or documented
+	- run validation checks
+	- create branch, commit, push, and open a PR
+
+### Use the skill directly (without `/prompt`)
+
+Send this in Copilot Chat:
+
+```text
+Use the skill "Update Supported Go Versions" from .github/skills/gosec-update-go-versions/SKILL.md.
+```
+
+### Expected outputs
+
+The result should include:
+
+- detected versions (`previous_patch`, `latest_patch`, `previous_minor`, `latest_minor`)
+- grouped file update summary
+- test command result
+- branch, commit SHA, PR title, and PR URL
+
 ## Rule development utilities
 
 Use these tools while building or debugging rules:
@@ -301,7 +414,7 @@ The release workflow builds binaries and Docker images, then signs artifacts.
 Verify signatures:
 
 ```bash
-cosign verify --key cosign.pub securego/gosec:<TAG>
+cosign verify --key cosign.pub ghcr.io/securego/gosec:<TAG>
 cosign verify-blob --key cosign.pub --signature gosec_<VERSION>_darwin_amd64.tar.gz.sig gosec_<VERSION>_darwin_amd64.tar.gz
 ```
 
@@ -316,7 +429,7 @@ make image
 Run against a local project:
 
 ```bash
-docker run --rm -it -w /<PROJECT>/ -v <YOUR_PROJECT_PATH>/<PROJECT>:/<PROJECT> securego/gosec /<PROJECT>/...
+docker run --rm -it -w /<PROJECT>/ -v <YOUR_PROJECT_PATH>/<PROJECT>:/<PROJECT> ghcr.io/securego/gosec:latest /<PROJECT>/...
 ```
 
 Set `-w` so module dependencies resolve from the mounted project root.
