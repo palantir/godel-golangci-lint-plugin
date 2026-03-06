@@ -657,13 +657,14 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.20
 ## explicit; go 1.20
 github.com/mattn/go-runewidth
-# github.com/mgechev/revive v1.14.0
-## explicit; go 1.24.0
+# github.com/mgechev/revive v1.15.0
+## explicit; go 1.25.0
 github.com/mgechev/revive/config
 github.com/mgechev/revive/formatter
 github.com/mgechev/revive/internal/astutils
 github.com/mgechev/revive/internal/ifelse
 github.com/mgechev/revive/internal/rule
+github.com/mgechev/revive/internal/syncset
 github.com/mgechev/revive/internal/typeparams
 github.com/mgechev/revive/lint
 github.com/mgechev/revive/logging
