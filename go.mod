@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/goccy/go-yaml v1.19.2
-	github.com/palantir/godel/v2 v2.153.0
+	github.com/palantir/godel/v2 v2.154.0
 	github.com/palantir/pkg/cobracli v1.3.0
 	github.com/palantir/pkg/matcher v1.3.0
 	github.com/palantir/pkg/yamlpatch v1.5.0
