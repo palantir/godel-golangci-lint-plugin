@@ -201,7 +201,7 @@ github.com/daixiang0/gci/pkg/parse
 github.com/daixiang0/gci/pkg/section
 github.com/daixiang0/gci/pkg/specificity
 github.com/daixiang0/gci/pkg/utils
-# github.com/dave/dst v0.27.3
+# github.com/dave/dst v0.27.4
 ## explicit; go 1.18
 github.com/dave/dst
 github.com/dave/dst/decorator
