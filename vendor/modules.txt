@@ -54,7 +54,7 @@ github.com/BurntSushi/toml/internal
 # github.com/Djarvur/go-err113 v0.1.1
 ## explicit; go 1.23.0
 github.com/Djarvur/go-err113
-# github.com/Masterminds/semver/v3 v3.4.0
+# github.com/Masterminds/semver/v3 v3.5.0
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
 # github.com/MirrexOne/unqueryvet v1.5.4
