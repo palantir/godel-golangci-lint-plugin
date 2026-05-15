@@ -74,7 +74,7 @@ func SuccessOutput(out io.Writer) {
 // configure any custom build flags or environment variables.
 func load(patterns []string) ([]*packages.Package, error) {
 	conf := packages.Config{
-		Mode:  packages.LoadAllSyntax | packages.NeedModule,
+		Mode:  packages.LoadTypes | packages.NeedModule,
 		Tests: true,
 	}
 	initial, err := packages.Load(&conf, patterns...)
