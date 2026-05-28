@@ -582,7 +582,7 @@ github.com/hexops/gotextdiff/span
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
-# github.com/jgautheron/goconst v1.10.1
+# github.com/jgautheron/goconst v1.10.2
 ## explicit; go 1.23
 github.com/jgautheron/goconst
 # github.com/jjti/go-spancheck v0.6.5
