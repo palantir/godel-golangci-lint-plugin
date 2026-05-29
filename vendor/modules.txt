@@ -138,8 +138,8 @@ github.com/breml/errchkjson
 github.com/butuzov/ireturn/analyzer
 github.com/butuzov/ireturn/analyzer/internal/config
 github.com/butuzov/ireturn/analyzer/internal/types
-# github.com/butuzov/mirror v1.3.0
-## explicit; go 1.19
+# github.com/butuzov/mirror v1.3.2
+## explicit; go 1.25.0
 github.com/butuzov/mirror
 github.com/butuzov/mirror/internal/checker
 # github.com/catenacyber/perfsprint v0.10.1
