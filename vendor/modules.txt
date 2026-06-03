@@ -612,8 +612,8 @@ github.com/lasiar/canonicalheader
 # github.com/ldez/exptostd v0.4.5
 ## explicit; go 1.24.0
 github.com/ldez/exptostd
-# github.com/ldez/gomoddirectives v0.8.0
-## explicit; go 1.24.0
+# github.com/ldez/gomoddirectives v0.9.0
+## explicit; go 1.25.0
 github.com/ldez/gomoddirectives
 # github.com/ldez/grignotin v0.10.1
 ## explicit; go 1.24.0
