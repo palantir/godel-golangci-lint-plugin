@@ -1052,7 +1052,7 @@ golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.47.0
+# golang.org/x/tools v0.48.0
 ## explicit; go 1.25.0
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/appends
@@ -1138,6 +1138,7 @@ golang.org/x/tools/internal/gcimporter
 golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
+golang.org/x/tools/internal/modindex
 golang.org/x/tools/internal/moreiters
 golang.org/x/tools/internal/packagepath
 golang.org/x/tools/internal/packagesinternal
