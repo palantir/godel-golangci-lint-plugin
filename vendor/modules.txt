@@ -218,7 +218,7 @@ github.com/dave/dst/decorator/resolver
 github.com/dave/dst/decorator/resolver/gopackages
 github.com/dave/dst/decorator/resolver/gotypes
 github.com/dave/dst/dstutil
-# github.com/davecgh/go-spew v1.1.1
+# github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 ## explicit
 github.com/davecgh/go-spew/spew
 # github.com/denis-tingaikin/go-header v1.0.0
@@ -768,7 +768,7 @@ github.com/pelletier/go-toml/v2/unstable
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/pmezard/go-difflib v1.0.0
+# github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 ## explicit
 github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v1.23.2
@@ -862,8 +862,8 @@ github.com/sashamelentyev/interfacebloat/pkg/analyzer
 ## explicit; go 1.23.0
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer
 github.com/sashamelentyev/usestdlibvars/pkg/analyzer/internal/mapping
-# github.com/securego/gosec/v2 v2.27.1
-## explicit; go 1.25.0
+# github.com/securego/gosec/v2 v2.28.0
+## explicit; go 1.25.8
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/analyzers
 github.com/securego/gosec/v2/cwe
