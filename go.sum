@@ -102,8 +102,8 @@ github.com/charmbracelet/x/termios v0.1.1 h1:o3Q2bT8eqzGnGPOYheoYS8eEleT5ZVNYNy8
 github.com/charmbracelet/x/termios v0.1.1/go.mod h1:rB7fnv1TgOPOyyKRJ9o+AsTU/vK5WHJ2ivHeut/Pcwo=
 github.com/charmbracelet/x/windows v0.2.2 h1:IofanmuvaxnKHuV04sC0eBy/smG6kIKrWG2/jYn2GuM=
 github.com/charmbracelet/x/windows v0.2.2/go.mod h1:/8XtdKZzedat74NQFn0NGlGL4soHB0YQZrETF96h75k=
-github.com/cheggaaa/pb/v3 v3.1.7 h1:2FsIW307kt7A/rz/ZI2lvPO+v3wKazzE4K/0LtTWsOI=
-github.com/cheggaaa/pb/v3 v3.1.7/go.mod h1:/Ji89zfVPeC/u5j8ukD0MBPHt2bzTYp74lQ7KlgFWTQ=
+github.com/cheggaaa/pb/v3 v3.2.0 h1:ziC7JV5/Ge2iZNa9ckxdXBxHHyPgC+p/QGzhWRoPlHU=
+github.com/cheggaaa/pb/v3 v3.2.0/go.mod h1:KtXGzgipYGqY3avGtFmlQTgiT88AEFvc1LvPk7oA9fM=
 github.com/ckaznocha/intrange v0.3.1 h1:j1onQyXvHUsPWujDH6WIjhyH26gkRt/txNlV7LspvJs=
 github.com/ckaznocha/intrange v0.3.1/go.mod h1:QVepyz1AkUoFQkpEqksSYpNpUo3c5W7nWh/s6SHIJJk=
 github.com/clipperhouse/displaywidth v0.11.0 h1:lBc6kY44VFw+TDx4I8opi/EtL9m20WSEFgwIwO+UVM8=

@@ -182,8 +182,8 @@ github.com/charmbracelet/x/termios
 # github.com/charmbracelet/x/windows v0.2.2
 ## explicit; go 1.23.0
 github.com/charmbracelet/x/windows
-# github.com/cheggaaa/pb/v3 v3.1.7
-## explicit; go 1.18
+# github.com/cheggaaa/pb/v3 v3.2.0
+## explicit; go 1.25.0
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
 # github.com/ckaznocha/intrange v0.3.1
