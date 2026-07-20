@@ -332,8 +332,8 @@ github.com/nmiyake/pkg/errorstringer v1.1.0 h1:A50S8deDIe+otJNB/BZKpDb5a3E4IUTOg
 github.com/nmiyake/pkg/errorstringer v1.1.0/go.mod h1:3c/Luj1o1XtUmdqL6QRKnBnkfBXNU5zU8a2vDxi9AF4=
 github.com/nmiyake/pkg/gofiles v1.2.0 h1:L0LWMfnHyMxiLP2Cuqno163/4zK73FscEsNd7sHo2M4=
 github.com/nmiyake/pkg/gofiles v1.2.0/go.mod h1:aPXiVvXPwxNanRNuFIRVPYn6eTC4qxjDZni6VNNlzMY=
-github.com/nunnatsa/ginkgolinter v0.23.0 h1:x3o4DGYOWbBMP/VdNQKgSj+25aJKx2Pe6lHr8gBcgf8=
-github.com/nunnatsa/ginkgolinter v0.23.0/go.mod h1:9qN1+0akwXEccwV1CAcCDfcoBlWXHB+ML9884pL4SZ4=
+github.com/nunnatsa/ginkgolinter v0.23.1 h1:1JOE+iDubBmH2YvP485w9AHBI8osHFBdVeMucRRvkDM=
+github.com/nunnatsa/ginkgolinter v0.23.1/go.mod h1:jh1sHyjC5TzL24rFUJvxtXV0iD2/9S7C/8N4aQd/lag=
 github.com/nwaples/rardecode v1.1.3 h1:cWCaZwfM5H7nAD6PyEdcVnczzV8i/JtotnyW/dD9lEc=
 github.com/nwaples/rardecode v1.1.3/go.mod h1:5DzqNKiOdpKKBH87u8VlvAnPZMXcGRhxWkRpHbbfGS0=
 github.com/onsi/ginkgo/v2 v2.32.0 h1:Hw7s2pVrQo/8Yz5N77qdnpHaoc+c6cC9WIV1Jce+J6E=
