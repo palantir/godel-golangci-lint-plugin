@@ -6,7 +6,7 @@ toolchain go1.26.5
 
 require (
 	github.com/goccy/go-yaml v1.19.2
-	github.com/palantir/godel/v2 v2.166.0
+	github.com/palantir/godel/v2 v2.167.0
 	github.com/palantir/pkg/cobracli v1.3.0
 	github.com/palantir/pkg/matcher v1.3.0
 	github.com/palantir/pkg/yamlpatch v1.5.0
