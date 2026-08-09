@@ -100,6 +100,9 @@ func (c *Checker) lines(args ...string) ([]string, error) {
 	if packages.PrintErrors(pkgs) > 0 {
 		return nil, fmt.Errorf("encountered errors")
 	}
+	if len(pkgs) == 0 {
+		return nil, fmt.Errorf("no packages to check")
+	}
 
 	prog, _ := ssautil.Packages(pkgs, 0)
 	prog.Build()
@@ -113,7 +116,7 @@ func (c *Checker) lines(args ...string) ([]string, error) {
 	prevLine := ""
 	for _, issue := range issues {
 		fpos := prog.Fset.Position(issue.Pos()).String()
-		if strings.HasPrefix(fpos, c.wd) {
+		if strings.HasPrefix(fpos, c.wd+string(filepath.Separator)) {
 			fpos = fpos[len(c.wd)+1:]
 		}
 		line := fmt.Sprintf("%s: %s", fpos, issue.Message())
@@ -172,7 +175,7 @@ func eqlConsts(c1, c2 *ssa.Const) bool {
 	if c1 == nil || c2 == nil {
 		return c1 == c2
 	}
-	if c1.Type() != c2.Type() {
+	if !types.Identical(c1.Type(), c2.Type()) {
 		return false
 	}
 	if c1.Value == nil || c2.Value == nil {
@@ -540,7 +543,7 @@ resLoop:
 			continue
 		}
 		res := results.At(i)
-		if res.Type() == errorType {
+		if types.Unalias(res.Type()) == errorType {
 			// "error is never used" is less useful, and it's up to
 			// tools like errcheck anyway.
 			continue
@@ -610,7 +613,7 @@ resLoop:
 }
 
 func containsTypeParam(t types.Type) bool {
-	switch t := t.(type) {
+	switch t := types.Unalias(t).(type) {
 	case *types.TypeParam, *types.Union:
 		return true
 	case *types.Struct:
