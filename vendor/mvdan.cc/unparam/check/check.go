@@ -286,15 +286,14 @@ func (c *Checker) Check() ([]Issue, error) {
 						// fn(someFunc()) fixes params
 						c.paramsRequiredBy[fn] = "forwarded call"
 					}
-				}
-				switch instr := instr.(type) {
-				case *ssa.Call:
-					for _, arg := range instr.Call.Args {
+					for _, arg := range instr.Common().Args {
 						if fn := findFunction(freeVars, arg); fn != nil {
-							// someFunc(fn)
+							// someFunc(fn), also via go or defer
 							c.signRequiredBy[fn] = "call"
 						}
 					}
+				}
+				switch instr := instr.(type) {
 				case *ssa.Phi:
 					for _, val := range instr.Edges {
 						if fn := findFunction(freeVars, val); fn != nil {
@@ -303,13 +302,14 @@ func (c *Checker) Check() ([]Issue, error) {
 						}
 					}
 				case *ssa.Return:
-					for _, val := range instr.Results {
+					results := returnValues(instr)
+					for _, val := range results {
 						if fn := findFunction(freeVars, val); fn != nil {
 							// return fn
 							c.signRequiredBy[fn] = "result"
 						}
 					}
-					if call := callExtract(instr, instr.Results); call != nil {
+					if call := callExtract(instr, results); call != nil {
 						if fn := findFunction(freeVars, call.Call.Value); fn != nil {
 							// return fn()
 							c.resultsRequiredBy[fn] = "return"
@@ -332,6 +332,26 @@ func (c *Checker) Check() ([]Issue, error) {
 					}
 					if fn := findFunction(freeVars, instr.Val); fn != nil {
 						c.signRequiredBy[fn] = as
+					}
+				case *ssa.MapUpdate:
+					if fn := findFunction(freeVars, instr.Value); fn != nil {
+						// someMap[someKey] = fn
+						c.signRequiredBy[fn] = "map value"
+					}
+				case *ssa.Send:
+					if fn := findFunction(freeVars, instr.X); fn != nil {
+						// someChan <- fn
+						c.signRequiredBy[fn] = "channel send"
+					}
+				case *ssa.Select:
+					for _, state := range instr.States {
+						if state.Dir != types.SendOnly {
+							continue
+						}
+						if fn := findFunction(freeVars, state.Send); fn != nil {
+							// select { case someChan <- fn: }
+							c.signRequiredBy[fn] = "channel send"
+						}
 					}
 				case *ssa.MakeInterface:
 					// someIface(named)
@@ -410,7 +430,9 @@ func findNamed(typ types.Type) *types.Named {
 	case *types.Pointer:
 		return findNamed(typ.Elem())
 	case *types.Named:
-		return typ
+		// Use the generic origin, so that an instantiation like G[int]
+		// and the receiver type of G's methods map to the same key.
+		return typ.Origin()
 	}
 	return nil
 }
@@ -506,6 +528,8 @@ func (c *Checker) checkFunc(fn *ssa.Function, pkg *packages.Package) {
 		if !ok {
 			continue
 		}
+		// Note that we don't use returnValues here, as resolving loads
+		// could add reports rather than suppress them; see its doc.
 		for i, val := range ret.Results {
 			if _, ok := val.(*ssa.Extract); !ok {
 				allRetsExtracting = false
@@ -963,6 +987,49 @@ func receivesExtractedArgs(freeVars map[*ssa.FreeVar]*ssa.Function, call ssa.Cal
 		return callee
 	}
 	return nil
+}
+
+// returnValues returns the values of a return instruction. In a function with
+// deferred calls, go/ssa stores the results in local variables and loads them
+// again after the deferred calls run; see through those stores and loads so
+// that patterns like "return fn()" are still recognized.
+//
+// Note that a deferred call may modify the stored results, so the resolved
+// values are only good enough to suppress reports, never to add them.
+func returnValues(ret *ssa.Return) []ssa.Value {
+	var results []ssa.Value // lazily cloned from ret.Results
+	for i, val := range ret.Results {
+		if stored := storedValue(ret.Block(), val); stored != nil {
+			if results == nil {
+				results = slices.Clone(ret.Results)
+			}
+			results[i] = stored
+		}
+	}
+	if results == nil {
+		return ret.Results
+	}
+	return results
+}
+
+// storedValue returns the value most recently stored within a block into the
+// local variable that val loads, if any.
+func storedValue(block *ssa.BasicBlock, val ssa.Value) ssa.Value {
+	load, ok := val.(*ssa.UnOp)
+	if !ok || load.Op != token.MUL {
+		return nil
+	}
+	alloc, ok := load.X.(*ssa.Alloc)
+	if !ok {
+		return nil
+	}
+	var stored ssa.Value
+	for _, instr := range block.Instrs {
+		if store, ok := instr.(*ssa.Store); ok && store.Addr == alloc {
+			stored = store.Val
+		}
+	}
+	return stored
 }
 
 // callExtract returns the call instruction fn(...) if it is used directly as
