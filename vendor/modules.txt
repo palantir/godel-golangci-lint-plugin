@@ -224,7 +224,7 @@ github.com/davecgh/go-spew/spew
 # github.com/denis-tingaikin/go-header v1.0.0
 ## explicit; go 1.23.0
 github.com/denis-tingaikin/go-header
-# github.com/dlclark/regexp2/v2 v2.6.0
+# github.com/dlclark/regexp2/v2 v2.7.1
 ## explicit; go 1.25
 github.com/dlclark/regexp2/v2
 github.com/dlclark/regexp2/v2/helpers
