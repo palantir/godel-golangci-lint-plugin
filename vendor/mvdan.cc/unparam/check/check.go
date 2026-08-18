@@ -73,6 +73,11 @@ type Checker struct {
 	// to typecheck properly, as they're required to implement interfaces.
 	typesImplementing map[*types.Named][]string
 
+	// linknamed records the funcs with a go:linkname directive in their
+	// doc comment, keyed by the position of the func's name, as their
+	// signatures cannot change.
+	linknamed map[token.Pos]bool
+
 	// localCallSites is a very simple form of a callgraph, only recording
 	// direct function calls within a single package.
 	localCallSites map[*ssa.Function][]ssa.CallInstruction
@@ -170,6 +175,19 @@ func generatedDoc(text string) bool {
 		strings.Contains(text, "DO NOT EDIT")
 }
 
+// linknameDoc reports whether a doc comment contains a go:linkname directive.
+func linknameDoc(doc *ast.CommentGroup) bool {
+	if doc == nil {
+		return false
+	}
+	for _, comment := range doc.List {
+		if strings.HasPrefix(comment.Text, "//go:linkname ") {
+			return true
+		}
+	}
+	return false
+}
+
 // eqlConsts reports whether two constant values, possibly nil, are equal.
 func eqlConsts(c1, c2 *ssa.Const) bool {
 	if c1 == nil || c2 == nil {
@@ -193,6 +211,7 @@ func (c *Checker) Check() ([]Issue, error) {
 	c.callByPos = make(map[token.Pos]*ast.CallExpr)
 	c.funcBodyByPos = make(map[token.Pos]*ast.BlockStmt)
 	c.typesImplementing = make(map[*types.Named][]string)
+	c.linknamed = make(map[token.Pos]bool)
 
 	wantPkg := make(map[*types.Package]*packages.Package)
 	genFiles := make(map[string]bool)
@@ -224,6 +243,9 @@ func (c *Checker) Check() ([]Issue, error) {
 				// FuncDecl.Name.
 				case *ast.FuncDecl:
 					c.funcBodyByPos[node.Name.Pos()] = node.Body
+					if linknameDoc(node.Doc) {
+						c.linknamed[node.Name.Pos()] = true
+					}
 				case *ast.FuncLit:
 					c.funcBodyByPos[node.Pos()] = node.Body
 				}
@@ -232,6 +254,30 @@ func (c *Checker) Check() ([]Issue, error) {
 		}
 	}
 	allFuncs := ssautil.AllFunctions(c.prog)
+
+	// ssautil.AllFunctions skips methods of unexported types unless they
+	// are reachable via an interface or an exported type, so we could miss
+	// call sites or entire functions to check. Add all the source-level
+	// funcs and methods from the loaded packages ourselves.
+	// We still want ssautil.AllFunctions for the synthetic wrappers it
+	// finds, such as those for promoted methods called via an interface,
+	// as their bodies record call sites too.
+	var addSrcFunc func(fn *ssa.Function)
+	addSrcFunc = func(fn *ssa.Function) {
+		allFuncs[fn] = true
+		for _, anon := range fn.AnonFuncs {
+			addSrcFunc(anon)
+		}
+	}
+	for _, pkg := range c.pkgs {
+		for _, def := range pkg.TypesInfo.Defs {
+			if def, ok := def.(*types.Func); ok {
+				if fn := c.prog.FuncValue(def); fn != nil {
+					addSrcFunc(fn)
+				}
+			}
+		}
+	}
 
 	// map from *ssa.FreeVar to *ssa.Function, to find function literals
 	// behind closure vars in the simpler scenarios.
@@ -498,6 +544,10 @@ func (c *Checker) checkFunc(fn *ssa.Function, pkg *packages.Package) {
 	}
 	if by := c.signRequiredBy[fn]; by != "" {
 		c.debug("  skip - func signature required by %s\n", by)
+		return
+	}
+	if c.linknamed[fn.Pos()] {
+		c.debug("  skip - go:linkname directive\n")
 		return
 	}
 	if recv := fn.Signature.Recv(); recv != nil {
