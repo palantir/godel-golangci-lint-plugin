@@ -1404,6 +1404,6 @@ mvdan.cc/gofumpt/internal/govendor/go/doc/comment
 mvdan.cc/gofumpt/internal/govendor/go/format
 mvdan.cc/gofumpt/internal/govendor/go/printer
 mvdan.cc/gofumpt/internal/version
-# mvdan.cc/unparam v0.0.0-20260818115549-3f964bcb5673
-## explicit; go 1.25.0
+# mvdan.cc/unparam v0.0.0-20260820064413-a201bf8e0538
+## explicit; go 1.26.0
 mvdan.cc/unparam/check
