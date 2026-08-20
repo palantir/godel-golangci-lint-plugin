@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package gofmt
+package internal
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/printer"
 	"go/scanner"
 	"go/token"
@@ -39,6 +38,9 @@ var (
 
 	// debugging
 	cpuprofile = flag.String("gofmt.cpuprofile", "", "write cpu profile to this file")
+
+	// errors
+	errFormattingDiffers = fmt.Errorf("formatting differs from gofmt's")
 )
 
 // Keep these in sync with go/format/format.go.
@@ -64,8 +66,8 @@ const (
 var fdSem = make(chan bool, 200)
 
 var (
-	rewrite    func(*token.FileSet, *ast.File) *ast.File
-	parserMode parser.Mode
+	rewrite func(*token.FileSet, *ast.File) *ast.File
+	// parserMode parser.Mode // NOTE(golangci-lint): replaced with a constant
 )
 
 func usage() {
@@ -73,22 +75,23 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+// NOTE(golangci-lint): replaced with a constant
 func initParserMode() {
-	parserMode = parser.ParseComments
-	if *allErrors {
-		parserMode |= parser.AllErrors
-	}
-	// It's only -r that makes use of go/ast's object resolution,
-	// so avoid the unnecessary work if the flag isn't used.
-	if *rewriteRule == "" {
-		parserMode |= parser.SkipObjectResolution
-	}
+	/*
+		parserMode = parser.ParseComments
+		if *allErrors {
+			parserMode |= parser.AllErrors
+		}
+		// It's only -r that makes use of go/ast's object resolution,
+		// so avoid the unnecessary work if the flag isn't used.
+		if *rewriteRule == "" {
+			parserMode |= parser.SkipObjectResolution
+		}
+	*/
 }
 
-func isGoFile(f fs.DirEntry) bool {
-	// ignore non-Go files
-	name := f.Name()
-	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go") && !f.IsDir()
+func isGoFilename(name string) bool {
+	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go")
 }
 
 // A sequencer performs concurrent tasks that may write output, but emits that
@@ -218,8 +221,12 @@ func (r *reporter) Report(err error) {
 		panic("Report with nil error")
 	}
 	st := r.getState()
-	scanner.PrintError(st.err, err)
-	st.exitCode = 2
+	if err == errFormattingDiffers {
+		st.exitCode = 1
+	} else {
+		scanner.PrintError(st.err, err)
+		st.exitCode = 2
+	}
 }
 
 func (r *reporter) ExitCode() int {
@@ -273,7 +280,7 @@ func processFile(filename string, info fs.FileInfo, in io.Reader, r *reporter) e
 			}
 
 			perm := info.Mode().Perm()
-			if err := writeFile(filename, src, res, perm, info.Size()); err != nil {
+			if err := writeFile(filename, src, res, perm); err != nil {
 				return err
 			}
 		}
@@ -281,6 +288,7 @@ func processFile(filename string, info fs.FileInfo, in io.Reader, r *reporter) e
 			newName := filepath.ToSlash(filename)
 			oldName := newName + ".orig"
 			r.Write(diff.Diff(oldName, src, newName, res))
+			return errFormattingDiffers
 		}
 	}
 
@@ -406,34 +414,30 @@ func gofmtMain(s *sequencer) {
 	}
 
 	for _, arg := range args {
-		switch info, err := os.Stat(arg); {
-		case err != nil:
-			s.AddReport(err)
-		case !info.IsDir():
-			// Non-directory arguments are always formatted.
-			arg := arg
-			s.Add(fileWeight(arg, info), func(r *reporter) error {
-				return processFile(arg, info, nil, r)
-			})
-		default:
-			// Directories are walked, ignoring non-Go files.
-			err := filepath.WalkDir(arg, func(path string, f fs.DirEntry, err error) error {
-				if err != nil || !isGoFile(f) {
-					return err
-				}
-				info, err := f.Info()
-				if err != nil {
-					s.AddReport(err)
-					return nil
-				}
-				s.Add(fileWeight(path, info), func(r *reporter) error {
-					return processFile(path, info, nil, r)
-				})
-				return nil
-			})
-			if err != nil {
-				s.AddReport(err)
+		// Walk each given argument as a directory tree.
+		// If the argument is not a directory, it's always formatted as a Go file.
+		// If the argument is a directory, we walk it, ignoring non-Go files.
+		if err := filepath.WalkDir(arg, func(path string, d fs.DirEntry, err error) error {
+			switch {
+			case err != nil:
+				return err
+			case d.IsDir():
+				return nil // simply recurse into directories
+			case path == arg:
+				// non-directories given as explicit arguments are always formatted
+			case !isGoFilename(d.Name()):
+				return nil // skip walked non-Go files
 			}
+			info, err := d.Info()
+			if err != nil {
+				return err
+			}
+			s.Add(fileWeight(path, info), func(r *reporter) error {
+				return processFile(path, info, nil, r)
+			})
+			return nil
+		}); err != nil {
+			s.AddReport(err)
 		}
 	}
 }
@@ -458,7 +462,7 @@ func fileWeight(path string, info fs.FileInfo) int64 {
 }
 
 // writeFile updates a file with the new formatted data.
-func writeFile(filename string, orig, formatted []byte, perm fs.FileMode, size int64) error {
+func writeFile(filename string, orig, formatted []byte, perm fs.FileMode) error {
 	// Make a temporary backup file before rewriting the original file.
 	bakname, err := backupFile(filename, orig, perm)
 	if err != nil {
@@ -482,7 +486,7 @@ func writeFile(filename string, orig, formatted []byte, perm fs.FileMode, size i
 	}
 
 	n, err := fout.Write(formatted)
-	if err == nil && int64(n) < size {
+	if err == nil {
 		err = fout.Truncate(int64(n))
 	}
 
