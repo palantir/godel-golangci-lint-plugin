@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 export CIRCLECI_TEMPLATE=go-distribution-oss
-export GO_VERSION=go1.26.0
+export GO_VERSION=go1.27.0
