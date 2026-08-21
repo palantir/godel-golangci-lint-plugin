@@ -347,8 +347,8 @@ github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJ
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=
 github.com/otiai10/mint v1.3.0/go.mod h1:F5AjcsTsWUqX+Na9fpHb52P8pcRX2CI6A3ctIT91xUo=
 github.com/otiai10/mint v1.3.1/go.mod h1:/yxELlJQ0ufhjUwhshSj+wFjZ78CnZ48/1wtmBH1OTc=
-github.com/palantir/godel/v2 v2.170.0 h1:9gQsundRMQhXuofLkRgRmKwog5AdmzXMpS+SjOkpUZ4=
-github.com/palantir/godel/v2 v2.170.0/go.mod h1:lMgz0889QxbTfA60KUJte9amgqJjf1Jxcd+rzqO1Bq8=
+github.com/palantir/godel/v2 v2.173.0 h1:NCndRsvJlj/SU4VZys1LFTDzNWriTaKVJO9dc3BZPWI=
+github.com/palantir/godel/v2 v2.173.0/go.mod h1:a363rkPY978gmU8GaRUuChaoeca2Y/2kVVl3LAJdh3k=
 github.com/palantir/pkg v1.1.0 h1:0EhrSUP8oeeh3MUvk7V/UU7WmsN1UiJNTvNj0sN9Cpo=
 github.com/palantir/pkg v1.1.0/go.mod h1:KC9srP/9ssWRxBxFCIqhUGC4Jt7OJkWRz0Iqehup1/c=
 github.com/palantir/pkg/cobracli v1.3.0 h1:PZhMQGNA3Ij1am+hDTzYhzLtgYgiKNUnpK7kmRADDWs=
@@ -363,8 +363,8 @@ github.com/palantir/pkg/yamlpatch v1.5.0 h1:186RUlcHFVf64onUhaI7nUCPzPIaRTQ5HJlK
 github.com/palantir/pkg/yamlpatch v1.5.0/go.mod h1:45cYAIiv9E0MiZnHjIIT2hGqi6Wah/DL6J1omJf2ny0=
 github.com/pelletier/go-toml/v2 v2.4.3 h1:GTRvJQutkOSftxIFD5xw9aepkYNuPWmVJpffdDPYVpY=
 github.com/pelletier/go-toml/v2 v2.4.3/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
-github.com/pierrec/lz4/v4 v4.1.28 h1:pPEPwRJ4kybBTfGt28q7lQsRJQHhC08axprdLD5Ppio=
-github.com/pierrec/lz4/v4 v4.1.28/go.mod h1:EoQMVJgeeEOMsCqCzqFm2O0cJvljX2nGZjcRIPL34O4=
+github.com/pierrec/lz4/v4 v4.1.29 h1:CDQY6qZOLI4DW0Nx6R1vRrifrCeQHnNXkMb0hZWXFjg=
+github.com/pierrec/lz4/v4 v4.1.29/go.mod h1:EoQMVJgeeEOMsCqCzqFm2O0cJvljX2nGZjcRIPL34O4=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
