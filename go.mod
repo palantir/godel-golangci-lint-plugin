@@ -221,7 +221,7 @@ require (
 	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	honnef.co/go/tools v0.8.0 // indirect
+	honnef.co/go/tools v0.8.1 // indirect
 	mvdan.cc/gofumpt v0.11.0 // indirect
 	mvdan.cc/unparam v0.0.0-20260820064413-a201bf8e0538 // indirect
 )
