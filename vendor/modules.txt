@@ -95,8 +95,8 @@ github.com/alecthomas/chroma/v2/formatters/svg
 github.com/alecthomas/chroma/v2/lexers
 github.com/alecthomas/chroma/v2/quick
 github.com/alecthomas/chroma/v2/styles
-# github.com/alecthomas/go-check-sumtype v0.3.1
-## explicit; go 1.22.0
+# github.com/alecthomas/go-check-sumtype v0.5.0
+## explicit; go 1.27.0
 github.com/alecthomas/go-check-sumtype
 # github.com/alexkohler/nakedret/v2 v2.0.6
 ## explicit; go 1.23.0
