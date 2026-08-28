@@ -37,7 +37,7 @@ var (
 			lintCmd.Short,
 			pluginapi.TaskInfoCommand(lintCmd.Name()),
 			pluginapi.TaskInfoVerifyOptions(
-				pluginapi.VerifyOptionsOrdering(intPtr(verifyorder.Check)),
+				pluginapi.VerifyOptionsOrdering(new(verifyorder.Check)),
 				pluginapi.VerifyOptionsApplyTrueArgs("--fix"),
 			),
 		),
@@ -48,8 +48,3 @@ var (
 		),
 	)
 )
-
-//go:fix inline
-func intPtr(val int) *int {
-	return new(val)
-}
