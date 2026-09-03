@@ -256,8 +256,8 @@ github.com/fzipp/gocyclo
 # github.com/ghostiam/protogetter v1.0.0
 ## explicit; go 1.26.0
 github.com/ghostiam/protogetter
-# github.com/go-critic/go-critic v0.14.4
-## explicit; go 1.24.0
+# github.com/go-critic/go-critic v0.15.0
+## explicit; go 1.25.0
 github.com/go-critic/go-critic/checkers
 github.com/go-critic/go-critic/checkers/internal/astwalk
 github.com/go-critic/go-critic/checkers/internal/lintutil
