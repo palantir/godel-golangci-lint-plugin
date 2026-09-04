@@ -2,6 +2,8 @@ module github.com/palantir/godel-golangci-lint-plugin
 
 go 1.27.0
 
+toolchain go1.27.1
+
 require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/palantir/godel/v2 v2.178.0
