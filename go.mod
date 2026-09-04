@@ -7,7 +7,7 @@ toolchain go1.27.1
 require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/palantir/godel/v2 v2.178.0
-	github.com/palantir/pkg/cobracli v1.3.0
+	github.com/palantir/pkg/cobracli v1.4.0
 	github.com/palantir/pkg/matcher v1.3.0
 	github.com/palantir/pkg/yamlpatch v1.5.0
 	github.com/pkg/errors v0.9.1
@@ -158,6 +158,8 @@ require (
 	github.com/nunnatsa/ginkgolinter v0.24.0 // indirect
 	github.com/palantir/pkg v1.1.0 // indirect
 	github.com/palantir/pkg/specdir v1.3.0 // indirect
+	github.com/palantir/witchcraft-go-error v1.42.0 // indirect
+	github.com/palantir/witchcraft-go-params v1.38.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/prometheus/client_golang v1.24.1 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
