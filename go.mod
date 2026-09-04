@@ -156,7 +156,7 @@ require (
 	github.com/nishanths/predeclared v0.2.2 // indirect
 	github.com/nmiyake/pkg/errorstringer v1.1.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.24.0 // indirect
-	github.com/palantir/pkg v1.1.0 // indirect
+	github.com/palantir/pkg v1.2.0 // indirect
 	github.com/palantir/pkg/specdir v1.3.0 // indirect
 	github.com/palantir/witchcraft-go-error v1.42.0 // indirect
 	github.com/palantir/witchcraft-go-params v1.38.0 // indirect
