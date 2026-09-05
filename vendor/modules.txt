@@ -728,7 +728,7 @@ github.com/nunnatsa/ginkgolinter/internal/rules
 github.com/nunnatsa/ginkgolinter/internal/typecheck
 github.com/nunnatsa/ginkgolinter/linter
 github.com/nunnatsa/ginkgolinter/version
-# github.com/palantir/godel/v2 v2.178.0
+# github.com/palantir/godel/v2 v2.180.0
 ## explicit; go 1.27.0
 github.com/palantir/godel/v2/framework/artifactresolver
 github.com/palantir/godel/v2/framework/builtintasks/installupdate/layout
