@@ -765,7 +765,7 @@ github.com/palantir/pkg/yamlpatch/yamlpatch
 ## explicit; go 1.26.0
 github.com/palantir/witchcraft-go-error
 github.com/palantir/witchcraft-go-error/internal/errors
-# github.com/palantir/witchcraft-go-params v1.46.0
+# github.com/palantir/witchcraft-go-params v1.47.0
 ## explicit; go 1.26.0
 github.com/palantir/witchcraft-go-params
 # github.com/pelletier/go-toml/v2 v2.4.3
