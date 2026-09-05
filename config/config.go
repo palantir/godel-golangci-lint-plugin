@@ -17,6 +17,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -306,7 +307,7 @@ func applyRemoveYAMLPath(yamlBytes []byte, yamlPath yamlpatch.Path) ([]byte, err
 func createObjectsToAddForPath(yamlPath string, value any) []any {
 	var result []any
 	segments := strings.Split(yamlPath, "/")
-	for idx := len(segments) - 1; idx >= 0; idx-- {
+	for idx := range slices.Backward(segments) {
 		if idx == len(segments)-1 {
 			// for the last segment, we just append the value
 			result = append(result, value)
