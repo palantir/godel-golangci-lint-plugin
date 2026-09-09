@@ -1000,7 +1000,7 @@ go-simpler.org/sloglint
 # go.augendre.info/arangolint v0.4.0
 ## explicit; go 1.24.0
 go.augendre.info/arangolint/pkg/analyzer
-# go.augendre.info/fatcontext v0.10.0
+# go.augendre.info/fatcontext v0.10.1
 ## explicit; go 1.25.0
 go.augendre.info/fatcontext/pkg/analyzer
 # go.uber.org/multierr v1.11.0
