@@ -158,7 +158,7 @@ require (
 	github.com/nunnatsa/ginkgolinter v0.24.0 // indirect
 	github.com/palantir/pkg v1.2.0 // indirect
 	github.com/palantir/pkg/specdir v1.4.0 // indirect
-	github.com/palantir/witchcraft-go-error v1.49.0 // indirect
+	github.com/palantir/witchcraft-go-error v1.50.0 // indirect
 	github.com/palantir/witchcraft-go-params v1.47.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/prometheus/client_golang v1.24.1 // indirect
