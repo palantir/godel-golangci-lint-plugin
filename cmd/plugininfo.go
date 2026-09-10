@@ -37,7 +37,7 @@ var (
 			lintCmd.Short,
 			pluginapi.TaskInfoCommand(lintCmd.Name()),
 			pluginapi.TaskInfoVerifyOptions(
-				pluginapi.VerifyOptionsOrdering(new(verifyorder.Check)),
+				pluginapi.VerifyOptionsOrdering(new(verifyorder.Format-50)),
 				pluginapi.VerifyOptionsApplyTrueArgs("--fix"),
 			),
 		),
