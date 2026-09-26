@@ -702,8 +702,8 @@ github.com/nakabonne/nestif
 # github.com/nishanths/exhaustive v0.13.0
 ## explicit; go 1.24.0
 github.com/nishanths/exhaustive
-# github.com/nishanths/predeclared v0.2.2
-## explicit; go 1.14
+# github.com/nishanths/predeclared v0.3.0
+## explicit; go 1.26.0
 github.com/nishanths/predeclared/passes/predeclared
 # github.com/nmiyake/pkg/errorstringer v1.1.0
 ## explicit; go 1.16
