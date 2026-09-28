@@ -331,8 +331,8 @@ github.com/gofrs/flock
 # github.com/golangci/asciicheck v0.5.0
 ## explicit; go 1.23.0
 github.com/golangci/asciicheck
-# github.com/golangci/canonicalheader v0.0.0-20260827115959-a25c71c521f6
-## explicit; go 1.25.0
+# github.com/golangci/canonicalheader v0.0.0-20260928145534-e18e5c5a078f
+## explicit; go 1.26.0
 github.com/golangci/canonicalheader
 # github.com/golangci/dupl v0.0.0-20260401084720-c99c5cf5c202
 ## explicit; go 1.22.0
