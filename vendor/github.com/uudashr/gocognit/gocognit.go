@@ -312,7 +312,9 @@ func (v *complexityVisitor) visitIfStmt(n *ast.IfStmt) ast.Visitor {
 	if _, ok := n.Else.(*ast.BlockStmt); ok {
 		v.incComplexity("else", n.Else.Pos())
 
+		v.incNesting()
 		ast.Walk(v, n.Else)
+		v.decNesting()
 	} else if _, ok := n.Else.(*ast.IfStmt); ok {
 		v.markAsElseNode(n.Else)
 		ast.Walk(v, n.Else)
@@ -457,6 +459,10 @@ func (v *complexityVisitor) visitCallExpr(n *ast.CallExpr) ast.Visitor {
 
 func (v *complexityVisitor) collectBinaryOps(exp ast.Expr) []token.Token {
 	v.markCalculated(exp)
+
+	if paren, ok := exp.(*ast.ParenExpr); ok {
+		return v.collectBinaryOps(paren.X)
+	}
 
 	if exp, ok := exp.(*ast.BinaryExpr); ok {
 		return mergeBinaryOps(v.collectBinaryOps(exp.X), exp.Op, v.collectBinaryOps(exp.Y))
