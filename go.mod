@@ -161,7 +161,7 @@ require (
 	github.com/palantir/witchcraft-go-error v1.50.0 // indirect
 	github.com/palantir/witchcraft-go-params v1.48.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
-	github.com/prometheus/client_golang v1.24.1 // indirect
+	github.com/prometheus/client_golang v1.25.0 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
 	github.com/prometheus/common v0.72.0 // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
