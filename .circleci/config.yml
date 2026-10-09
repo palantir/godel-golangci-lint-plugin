@@ -49,6 +49,8 @@ workflows:
           name: "verify"
           executor: "standard-executor"
           skip_tests: true
+          # temporary to allow building with go1.27.2
+          verify_args: "--parallel=true --skip-lint"
           requires:
             - build
           <<: *all-tags-filter
