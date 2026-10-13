@@ -1,38 +1,42 @@
 /*
-Package enumerated finds declarations of enumerated types and
-enumerated constants.
+Package enumerated defines a static analysis that finds
+declarations of enumerated types and enumerated constants.
 
-# Enumerated types
+# Enumerated Types and Enumerated Constants
 
-An enumerated type is a [defined type] whose underlying type is
-either a boolean, numeric, or string type. The type definition
-must not specify type parameters. An enumerated type cannot
-directly be one of the predeclared types; it must be a new,
-distinct type.
+A [defined type] is allowed to be an enumerated type if it
+satisfies the following conditions. The underlying type of the
+defined type must be either a numeric or string type. The type
+definition must not specify type parameters. A predeclared type
+cannot directly be an enumerated type.
 
-Examples of valid and invalid types:
+These examples show allowed and disallowed enumerated types:
 
-	type T1 int         // T1: valid
-	type T2 string      // T2: valid
-	type T3 T1          // T3: valid
-	type Q1 []int       // Q1: invalid: underlying type []int is not a boolean, numeric, or string type
-	type S1[E any] int  // S1: invalid: parameterized
-	int                 // int: invalid: predeclared type
+	type T1 int         // T1: allowed
+	type T2 int32       // T2: allowed
+	type T3 rune        // T3: allowed
+	type T4 string      // T4: allowed
+	type T5 T1          // T5: allowed
+	type T6 T5          // T6: allowed
 
-The possible values of a given enumerated type are the values of
-each enumerated constant of that type. A type that is valid but
-has an empty set of values is not considered an enumerated type
-by this package.
+	type Q1 []int       // Q1: disallowed: underlying type []int is not a numeric or string type
+	type S1[E any] int  // S1: disallowed: parameterized
+	int32               // int32: disallowed: predeclared type
+	rune                // rune: disallowed: predeclared type
 
-# Enumerated constants
+Declared constants whose type is an allowed enumerated type
+form enumerated constants of the type. An enumerated type and
+the constants of the type must be declared in the same [block] to
+be considered by the analysis. Constants with blank identifier
+names are ignored. Each enumerated type must have at least one
+enumerated constant of the type, otherwise the type is
+disregarded by the analysis.
 
-Declared constants where the type of the constant is an
-enumerated type form enumerated constants of that type. The type
-and the constants must be declared in the same [block] to be
-considered by the analysis. Constants declared with the blank
-identifier are ignored. In the following example, the type T1 is
-an enumerated type and the constants X0, X1, and X2 are
-enumerated constants of that type.
+The possible values of an enumerated type are the combined set of
+values of each enumerated constant of the type.
+
+In the following example, the type T1 is an enumerated type. The
+constants X0, X1, and X2 are enumerated constants of the type.
 
 	type T1 int
 
@@ -44,11 +48,10 @@ enumerated constants of that type.
 
 The enumerated constants of a given enumerated type may be
 declared across multiple [ConstDecl] productions. The constant
-value of an enumerated constant may be any allowed [constant
-expression]; this includes literal values, values generated with
-iota, and values containing constant identifiers. It is
-permitted for multiple enumerated constants of a given enumerated
-type to have the same constant value.
+value of an enumerated constant can be any value allowed by the
+language (e.g. iota, constant literals, other constant
+identifiers). The analysis permits multiple enumerated constants
+of a given enumerated type to have the same value.
 
 # Flags
 
@@ -60,18 +63,17 @@ The synopsis of the flags is:
 	[-B] [-i] [-p]
 
 The -i flag directs the analysis to only consider constants
-that are declared using iota in their value expressions.
+that are declared using iota in their values.
 
 The -B flag directs the analysis to ignore constants that are
-declared using bitwise operators (& | ^ &^ << >>) in their value
-expressions.
+declared using bitwise operators (& | ^ &^ << >>) in their
+values.
 
 The -p flag directs the analysis to only consider types and
-constants that are declared at package level.
+constants that have top-level declarations.
 
 [block]: https://golang.org/ref/spec#Blocks
 [ConstDecl]: https://golang.org/ref/spec#Constant_declarations
-[constant expression]: https://golang.org/ref/spec#Constant_expressions
 [defined type]: https://golang.org/ref/spec#Type_definitions
 */
 package enumerated

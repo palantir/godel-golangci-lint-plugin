@@ -1,14 +1,15 @@
-The exhaustive static analysis checks that expression switch
-statements, in which the type of the switch expression is an
-enumerated type, are exhaustive.
+The exhaustive static analysis checks that
+switch statements in Go source code are exhaustive. It can check
+expression switches, in which the switch expression type is
+an enumerated type, and type switches.
 
-The analysis is implemented in multiple passes; see the packages
-in the 'passes/\*' directories.
-Package enumerated find declarations of enumerated types and
+The complete analysis is implemented in multiple passes; see the
+packages under the 'passes' directory.
+Package enumerated finds declarations of enumerated types and
 enumerated constants.
-Package exhaustive scans a syntax tree for eligible
-expression switch statements and checks that the switch
-statements are exhaustive.
+Package exhaustive scans the syntax tree of Go packages for eligible
+switch statements and checks that the switch statements are
+exhaustive.
 
 Documentation:
 
@@ -24,8 +25,9 @@ The exhaustive command can be installed with 'go install'.
 
 The synopsis of the command is:
 
-	exhaustive [-B] [-d] [-defrequire] [-e] [-g] [-i] [-p] [-check string]
-	           [-constignore regexp] [-typeignore regexp] [-typeonly regexp] [packages]
+	exhaustive [-B] [-casenil] [-d] [-defrequire] [-e] [-g] [-i] [-p]
+	           [-check string] [-constignore regexp] [-typeignore regexp]
+	           [-typeonly regexp] [packages]
 
 The flags are documented in the package comments. See links to
 documentation above.
@@ -38,36 +40,70 @@ enumerated analyzer and the exhaustive analyzer.
 
 # Examples
 
-Given the following Go source code:
+Given the expression switch
 
 ```
-package example
+package a
 
 type vcs int
 
 const (
-	bzr vcs = iota
+	bazaar vcs = iota
 	fossil
 	git
-	hg
-	svn
+	mercurial
+	subversion
 	darcs
 )
 
-func f(v vcs) {
+func f1(v vcs) {
 	switch v {
-	case bzr:
+	case bazaar:
 	case fossil:
 	case git:
-	case svn:
+	case subversion:
 	}
 }
 ```
 
-the exhaustive command produces the following diagnostic:
+the analysis produces the following diagnostic
 
-	example.go:15:2: switch not exhaustive: missing cases: hg, darcs
+	$ exhaustive
+	a.go:15:2: missing cases in expression: mercurial, darcs
 
-Though it is not so in the example, in general the enumerated
-type declarations and the switch statements can be in different
-packages.
+Though it is not so in the example above, in general the
+enumerated type declarations and the switch statement can be in
+different packages.
+
+Given the type switch
+
+```
+package b
+
+import "go/types"
+
+func f2(t types.Type) bool {
+	switch t.(type) {
+	case *types.Array,
+		*types.Chan,
+		*types.Interface,
+		*types.Map,
+		*types.Pointer,
+		*types.Signature,
+		*types.Slice,
+		*types.Struct,
+		*types.Tuple,
+		*types.Union:
+		return false
+	case *types.Alias, *types.Named:
+		return true
+	default:
+		panic("internal error: unhandled type")
+	}
+}
+```
+
+the diagnostic (as of go1.27) is
+
+	$ exhaustive -check=typeswitch
+	b.go:6:2: missing cases in type switch: *types.Basic, *types.TypeParam
