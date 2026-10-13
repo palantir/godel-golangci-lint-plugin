@@ -921,8 +921,8 @@ github.com/ssgreg/nlreturn/v2/pkg/nlreturn
 # github.com/stbenjam/no-sprintf-host-port v0.3.1
 ## explicit; go 1.24.0
 github.com/stbenjam/no-sprintf-host-port/pkg/analyzer
-# github.com/stretchr/objx v0.5.3
-## explicit; go 1.20
+# github.com/stretchr/objx v0.7.0
+## explicit; go 1.25
 github.com/stretchr/objx
 # github.com/stretchr/testify v1.12.1
 ## explicit; go 1.17
