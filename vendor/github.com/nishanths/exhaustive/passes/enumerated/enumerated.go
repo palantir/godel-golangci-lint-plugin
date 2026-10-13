@@ -30,7 +30,7 @@ var Analyzer = &analysis.Analyzer{
 func init() {
 	Analyzer.Flags.BoolVar(&fIota, "i", fIota, "only consider constants declared using iota")
 	Analyzer.Flags.BoolVar(&fNoBitwise, "B", fNoBitwise, "ignore constants declared using bitwise operators")
-	Analyzer.Flags.BoolVar(&fPkgLevel, "p", fPkgLevel, "only consider types and constants declared at package level")
+	Analyzer.Flags.BoolVar(&fPkgLevel, "p", fPkgLevel, "only consider types and constants with top-level declarations")
 }
 
 var (
@@ -54,14 +54,11 @@ func run(pass *analysis.Pass) (any, error) {
 		rejectBitwise:   fNoBitwise,
 	})
 
-	var ts []*types.Named
 	var cs []*types.Const
 	for _, f := range pass.AllObjectFacts() {
 		switch ff := f.Fact.(type) {
 		case *isEnumeratedFact:
 			switch ff.Kind {
-			case "type":
-				ts = append(ts, f.Object.(*types.TypeName).Type().(*types.Named))
 			case "constant":
 				cs = append(cs, f.Object.(*types.Const))
 			}
@@ -69,9 +66,6 @@ func run(pass *analysis.Pass) (any, error) {
 	}
 
 	m := make(map[*types.Named][]*types.Const)
-	for _, t := range ts {
-		m[t] = nil
-	}
 	for _, c := range cs {
 		t := c.Type().(*types.Named)
 		m[t] = append(m[t], c)
@@ -167,6 +161,12 @@ func find(pass *analysis.Pass, opts *options) {
 		})
 	}
 
+	// Note that the logic in this function implies that each
+	// enumerated type in m has at least one enumerated
+	// constant.
+	// The implementation matches the behavior documented in
+	// the package comment.
+	//
 	m := make(map[*types.Named][]*types.Const)
 	for _, c := range cs {
 		t := c.Type().(*types.Named)
@@ -191,7 +191,7 @@ func find(pass *analysis.Pass, opts *options) {
 }
 
 func permittedEnumeratedType(t types.Type) (*types.Named, bool) {
-	// As of go1.26, the Go spec and package go/types vary in
+	// As of go1.27, the Go spec and package go/types vary in
 	// terminology.
 	// For our purposes, an enumerated type must be (in Go
 	// spec terminology) a defined type. It must not be one
@@ -208,17 +208,16 @@ func permittedEnumeratedType(t types.Type) (*types.Named, bool) {
 	if !ok {
 		return nil, false
 	}
-	// The type definition must not not specify type parameters.
+	// The type definition must not specify type parameters.
 	if n.TypeParams() != nil {
 		return nil, false
 	}
-	// The underlying type must be a boolean, numeric, or
-	// string type.
+	// The underlying type must be a numeric or string type.
 	basic, ok := n.Underlying().(*types.Basic)
 	if !ok {
 		return nil, false
 	}
-	if info := basic.Info(); info&(types.IsBoolean|types.IsNumeric|types.IsString) == 0 {
+	if info := basic.Info(); info&(types.IsNumeric|types.IsString) == 0 {
 		return nil, false
 	}
 	return n, true
@@ -334,11 +333,11 @@ func constExprUsesOp(pass *analysis.Pass, ops map[token.Token]struct{}, expr ast
 
 func slicemap[S ~[]E, E, F any](s S, fn func(E) F) []F {
 	var ret []F
-	if len(s) > 0 {
+	if s != nil {
 		ret = make([]F, len(s))
-	}
-	for i := range s {
-		ret[i] = fn(s[i])
+		for i := range s {
+			ret[i] = fn(s[i])
+		}
 	}
 	return ret
 }
