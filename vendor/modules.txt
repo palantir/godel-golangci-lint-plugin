@@ -950,7 +950,7 @@ github.com/timonwong/loggercheck/internal/nilness
 github.com/timonwong/loggercheck/internal/rules
 github.com/timonwong/loggercheck/internal/sets
 github.com/timonwong/loggercheck/internal/stringutil
-# github.com/tomarrell/wrapcheck/v2 v2.12.0
+# github.com/tomarrell/wrapcheck/v2 v2.13.0
 ## explicit; go 1.24.0
 github.com/tomarrell/wrapcheck/v2/wrapcheck
 # github.com/tommy-muehle/go-mnd/v2 v2.5.1
