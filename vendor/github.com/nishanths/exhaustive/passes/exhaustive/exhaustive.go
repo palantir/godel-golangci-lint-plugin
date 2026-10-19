@@ -25,8 +25,8 @@ var Analyzer = &analysis.Analyzer{
 	// may not all be actually necessary. The set of actually necessary
 	// analyzers depends on the value of the -check flag and may be a
 	// subset of the analyzers specified here.
-	// Analysis driver programs that want improved performance
-	// may want to edit this field during program initialization
+	// Analysis driver programs that want to be efficient
+	// should edit this field during program initialization
 	// before analyzers are run.
 	//
 	// TODO: consider adding API to facilitate the above.
@@ -42,7 +42,7 @@ func init() {
 	Analyzer.Flags.BoolVar(&fDefaultEx, "d", fDefaultEx, "including a default case makes a switch exhaustive")
 	Analyzer.Flags.BoolVar(&fRequireDefaultCase, "defrequire", fRequireDefaultCase, "always require a default case in checked expression switches")
 	Analyzer.Flags.BoolVar(&fRequireCaseNil, "casenil", fRequireCaseNil, "type switches must include a nil case to be exhaustive")
-	Analyzer.Flags.StringVar(&fCheck, "check", fCheck, "comma-separated list of syntax elements to check; available values: switch, mapliteral, typeswitch")
+	Analyzer.Flags.StringVar(&fCheck, "check", fCheck, "comma-separated list of syntax elements to check; available values: switch, typeswitch, mapliteral")
 	Analyzer.Flags.BoolVar(&fCheckGenerated, "g", fCheckGenerated, "additionally analyze generated files")
 	Analyzer.Flags.Var(&fExcludeType, "typeignore", "switches in which the type name is matched by `regexp` are not checked")
 	Analyzer.Flags.Var(&fIncludeType, "typeonly", "only switches in which the type name is matched by `regexp` are checked")
@@ -174,20 +174,26 @@ func run(pass *analysis.Pass) (any, error) {
 		if !opts.checkGenerated && ast.IsGenerated(file) {
 			return false
 		}
-		comments := ast.NewCommentMap(pass.Fset, file, file.Comments)
+
+		var cmap ast.CommentMap
+
 		c.Inspect(nodes, func(c inspector.Cursor) (descend bool) {
+			if cmap == nil {
+				cmap = ast.NewCommentMap(pass.Fset, file, file.Comments)
+			}
 			switch n := c.Node().(type) {
 			case *ast.SwitchStmt:
-				checkSwitch(pass, n, comments[n], opts)
+				checkExprSwitch(pass, n, cmap[n], opts)
 			case *ast.CompositeLit:
-				checkMapLiteral(pass, n, compositeLitComments(pass, comments, c), opts)
+				checkMapLit(pass, n, compositeLitComments(pass, cmap, c), opts)
 			case *ast.TypeSwitchStmt:
-				checkTypeSwitch(pass, n, comments[n], typeSwitchCh, opts)
+				checkTypeSwitch(pass, n, cmap[n], typeSwitchCh, opts)
 			default:
 				panic(fmt.Sprintf("internal error: unexpected node of type %T", n))
 			}
 			return true
 		})
+
 		return true
 	})
 
@@ -266,10 +272,8 @@ func isPkgLevel(obj types.Object) bool {
 	return obj.Pkg() != nil && obj.Pkg().Scope().Lookup(obj.Name()) == obj
 }
 
+// callers must ensure that obj is a package-level object.
 func fullname(obj types.Object) string {
-	if !isPkgLevel(obj) {
-		panic("not a package-level object")
-	}
 	var b strings.Builder
 	b.WriteString(obj.Pkg().Path())
 	b.WriteString(".")
@@ -284,10 +288,4 @@ func matchAny(rs []*regexp.Regexp, s string) bool {
 		}
 	}
 	return false
-}
-
-func assert(x bool) {
-	if !x {
-		panic("assertion failed")
-	}
 }

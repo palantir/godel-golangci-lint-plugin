@@ -30,7 +30,7 @@ var Analyzer = &analysis.Analyzer{
 func init() {
 	Analyzer.Flags.BoolVar(&fIota, "i", fIota, "only consider constants declared using iota")
 	Analyzer.Flags.BoolVar(&fNoBitwise, "B", fNoBitwise, "ignore constants declared using bitwise operators")
-	Analyzer.Flags.BoolVar(&fPkgLevel, "p", fPkgLevel, "only consider types and constants with top-level declarations")
+	Analyzer.Flags.BoolVar(&fPkgLevel, "p", fPkgLevel, "only consider types and constants that are declared at top level")
 }
 
 var (
@@ -54,22 +54,19 @@ func run(pass *analysis.Pass) (any, error) {
 		rejectBitwise:   fNoBitwise,
 	})
 
-	var cs []*types.Const
+	m := make(map[*types.Named][]*types.Const)
 	for _, f := range pass.AllObjectFacts() {
 		switch ff := f.Fact.(type) {
 		case *isEnumeratedFact:
 			switch ff.Kind {
 			case "constant":
-				cs = append(cs, f.Object.(*types.Const))
+				c := f.Object.(*types.Const)
+				t := c.Type().(*types.Named)
+				m[t] = append(m[t], c)
 			}
 		}
 	}
 
-	m := make(map[*types.Named][]*types.Const)
-	for _, c := range cs {
-		t := c.Type().(*types.Named)
-		m[t] = append(m[t], c)
-	}
 	return Result(m), nil
 }
 
@@ -94,7 +91,7 @@ func find(pass *analysis.Pass, opts *options) {
 	constValues := make(map[*types.Const]ast.Expr) // value expressions for all const declarations
 
 	if testingExtraFacts {
-		in.Preorder([]ast.Node{&ast.GenDecl{}}, func(n ast.Node) {
+		in.Preorder([]ast.Node{(*ast.GenDecl)(nil)}, func(n ast.Node) {
 			genDecl := n.(*ast.GenDecl)
 			if genDecl.Tok != token.TYPE {
 				return
@@ -113,7 +110,7 @@ func find(pass *analysis.Pass, opts *options) {
 		})
 	}
 
-	in.Preorder([]ast.Node{&ast.GenDecl{}}, func(n ast.Node) {
+	in.Preorder([]ast.Node{(*ast.GenDecl)(nil)}, func(n ast.Node) {
 		decl := n.(*ast.GenDecl)
 		if decl.Tok != token.CONST {
 			return
