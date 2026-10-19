@@ -16,16 +16,13 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-func checkSwitch(pass *analysis.Pass, sw *ast.SwitchStmt, comments []*ast.CommentGroup, opts *options) {
-	directives, err := parseDirectives(comments)
+func checkExprSwitch(pass *analysis.Pass, sw *ast.SwitchStmt, comments []*ast.CommentGroup, opts *options) {
+	directives, proceed, err := proceedCommentDirectives(comments, opts)
 	if err != nil {
-		pass.Reportf(sw.Pos(), "error parsing comment directives: %s", err)
+		pass.Reportf(sw.Pos(), "%s", err)
 		return
 	}
-	if opts.checkEnforceOnly && !directives[dirEnforce] {
-		return
-	}
-	if directives[dirIgnore] {
+	if !proceed {
 		return
 	}
 
@@ -117,20 +114,18 @@ type typeSwitchState struct {
 
 	// The '[]tp' value is the set of types
 	// that are identical to the type in the key.
-	// The type name in the key is always from a defined type.
+	// One of the elements of the '[]tp' value will be
+	// the type in the key itself.
+	//
+	// The type name in the key is always that of a defined type.
 	// See func computeTypeRelations for details.
 	// Only those relationships relevant for type switch
 	// analysis are recorded in this map.
-	//
-	// Note: the structure of the map keys is
-	// a {*types.TypeName, bool} pair, instead of
-	// simply *types.TypeName, because the former structure
-	// computed once eliminates later repeated computations
-	// at usage sites.
 	identical map[tp][]tp
 }
 
-// tp represents a type T or type *T, where T a type name.
+// tp represents a type T or type *T,
+// where T is a type name.
 type tp struct {
 	*types.TypeName
 	pointer bool
@@ -144,15 +139,12 @@ func (t tp) String() string {
 }
 
 func checkTypeSwitch(pass *analysis.Pass, sw *ast.TypeSwitchStmt, comments []*ast.CommentGroup, ch *typeSwitchState, opts *options) {
-	directives, err := parseDirectives(comments)
+	directives, proceed, err := proceedCommentDirectives(comments, opts)
 	if err != nil {
-		pass.Reportf(sw.Pos(), "error parsing comment directives: %s", err)
+		pass.Reportf(sw.Pos(), "%s", err)
 		return
 	}
-	if opts.checkEnforceOnly && !directives[dirEnforce] {
-		return
-	}
-	if directives[dirIgnore] {
+	if !proceed {
 		return
 	}
 
@@ -179,13 +171,12 @@ func checkTypeSwitch(pass *analysis.Pass, sw *ast.TypeSwitchStmt, comments []*as
 		// type assertions, x must be of interface type,
 		// but not a type parameter".
 		//
-		// This branch is impossible as of go1.27. But
-		// be future-proof for correctness. In particular
-		// the IsMethodSet requirement (i.e. basic
-		// interface) is essential for correctness
-		// because the logic below only evaluates types
-		// that are valid method receiver types.
-		skip("expression in type assertion is not basic interface")
+		// This branch is impossible as of go1.27,
+		// but be future-proof for correctness.
+		// The IsMethodSet requirement is essential for
+		// correctness because the logic below only
+		// evaluates types that are valid method receiver types.
+		skip("unsupported expression in type assertion")
 		return
 	}
 
@@ -228,12 +219,33 @@ func checkTypeSwitch(pass *analysis.Pass, sw *ast.TypeSwitchStmt, comments []*as
 			if t == nil {
 				continue
 			}
+
 			if t == types.Typ[types.UntypedNil] {
 				reportMissingNil = false
 			}
-			// Note: It is not necessary to consider *types.TypeParam here.
-			// Type parameters have underlying type interface, and as such
-			// cannot contribute to removing entries from the need map.
+
+			// Go spec: "If T is an interface type, x.(T) asserts that
+			// the dynamic type of x implements the interface T."
+			//
+			// Note: It is possible in the language for a type to
+			// implement an interface T. It is impossible for a type
+			// to implement *T where T is an interface. Thus it is
+			// sufficient to only consider interface types (but not,
+			// for example, pointers to interface types).
+			//
+			// The following code as written correctly handles
+			// traditional interface types and type parameters.
+			// It is not necessary to handle e.g. []P, where P is a
+			// type parameter, because these are not of underlying
+			// type interface and it is impossible for a type to
+			// implement them.
+			if caseInterface, ok := t.Underlying().(*types.Interface); ok {
+				computeImplements(ch, r, caseInterface)
+				for t := range ch.impl[caseInterface] {
+					delete(need, t)
+				}
+			}
+
 			switch t := types.Unalias(t).(type) {
 			case *types.Named:
 				n := t
@@ -267,7 +279,7 @@ func computeImplements(ch *typeSwitchState, r *finder.Result, swInterface *types
 
 	// Note: None of the non-interface predeclared types have
 	// methods as of go1.27 and thus they cannot implement a
-	// non-empty basic interface. If this does not hold true
+	// non-empty interface. If this does not hold true
 	// in future Go versions, then those predeclared types
 	// must be evaluated for the following "implements" checks.
 	// A similar note applies in func computeTypeRelations.
@@ -393,14 +405,15 @@ func knownEnumeratedType(enums enumerated.Result, t types.Type) (*types.Named, [
 			// 	type B A
 			//
 			// The guarantee that (*types.Named).Underlying() will
-			// not be a *types.Named value is critical for
+			// not be a *types.Named value is essential for
 			// correctness of the current function. The goal
 			// of the function is to determine whether a
 			// type (say, B) represented by the argument t is
 			// an enumerated type. The function must not consider
 			// whether a different named type (i.e., A) is an enumerated type.
-			_, isNamed := concrete.Underlying().(*types.Named)
-			assert(!isNamed)
+			if _, ok := concrete.Underlying().(*types.Named); ok {
+				return nil, nil, false
+			}
 			t = concrete.Underlying()
 		default:
 			// The possible types, as of go1.27, are handled
@@ -421,7 +434,7 @@ func knownEnumeratedType(enums enumerated.Result, t types.Type) (*types.Named, [
 // Note that it is possible for the same constant value to have
 // multiple names, i.e. multiple *types.Const.
 func needValues(currentPkg *types.Package, cs []*types.Const, opts *options) map[string][]*types.Const {
-	ret := make(map[string][]*types.Const)
+	ret := make(map[string][]*types.Const, len(cs)) // usually one name per value
 	for _, c := range cs {
 		if c.Pkg() != currentPkg && !c.Exported() {
 			continue
@@ -447,7 +460,7 @@ func needTypes(currentPkg *types.Package, ch *typeSwitchState, swInterface *type
 	return ret
 }
 
-// Format constant names for an expression switch diagnostic.
+// formats constant names for an expression switch diagnostic.
 func formatMissingNames(currentPkg *types.Package, missing map[string][]*types.Const) string {
 	// Note that the constants are grouped by value in the input.
 	// The logic below does the following: The constants in
@@ -457,7 +470,6 @@ func formatMissingNames(currentPkg *types.Package, missing map[string][]*types.C
 	groups := make([][]*types.Const, len(missing))
 	i := 0
 	for _, cs := range missing {
-		assert(len(cs) != 0)   // internal error: unexpectedly zero constants for value
 		cs := slices.Clone(cs) // do not modify input
 		slices.SortFunc(cs, func(a, b *types.Const) int { return cmp.Compare(a.Pos(), b.Pos()) })
 		groups[i] = cs
@@ -481,13 +493,8 @@ func formatMissingNames(currentPkg *types.Package, missing map[string][]*types.C
 	return buf.String()
 }
 
-// Format type names for a type switch diagnostic.
+// formats type names for a type switch diagnostic.
 func formatMissingTypes(currentPkg *types.Package, missing map[tp][]tp, missingNil bool) string {
-	type group struct {
-		t     tp
-		names []tp
-	}
-
 	cmpfn := func(a, b tp) int {
 		switch {
 		case !a.IsAlias() && b.IsAlias():
@@ -526,6 +533,10 @@ func formatMissingTypes(currentPkg *types.Package, missing map[tp][]tp, missingN
 		return nameString(currentPkg, t)
 	}
 
+	type group struct {
+		t     tp
+		names []tp
+	}
 	groups := make([]group, len(missing))
 	i := 0
 	for t, names := range missing {
@@ -560,6 +571,20 @@ func formatMissingTypes(currentPkg *types.Package, missing map[tp][]tp, missingN
 	return buf.String()
 }
 
+func proceedCommentDirectives(comments []*ast.CommentGroup, opts *options) (map[directive]bool, bool, error) {
+	directives, err := parseDirectives(comments)
+	if err != nil {
+		return nil, false, fmt.Errorf("error parsing comment directives: %s", err)
+	}
+	if opts.checkEnforceOnly && !directives[dirEnforce] {
+		return directives, false, nil
+	}
+	if directives[dirIgnore] {
+		return directives, false, nil
+	}
+	return directives, true, nil
+}
+
 func proceedInclExclPatterns(obj types.Object, opts *options) bool {
 	if len(opts.includeTypePatterns) != 0 {
 		if isPkgLevel(obj) && matchAny(opts.includeTypePatterns, fullname(obj)) {
@@ -582,21 +607,18 @@ func proceedInclExclPatterns(obj types.Object, opts *options) bool {
 	return true // default is to include
 }
 
-func checkMapLiteral(pass *analysis.Pass, compLit *ast.CompositeLit, comments []*ast.CommentGroup, opts *options) {
+func checkMapLit(pass *analysis.Pass, compLit *ast.CompositeLit, comments []*ast.CommentGroup, opts *options) {
 	mapType, ok := unpointer(pass.TypesInfo.Types[compLit].Type.Underlying()).(*types.Map)
 	if !ok {
 		return
 	}
 
-	directives, err := parseDirectives(comments)
+	directives, proceed, err := proceedCommentDirectives(comments, opts)
 	if err != nil {
-		pass.Reportf(compLit.Pos(), "error parsing comment directives: %s", err)
+		pass.Reportf(compLit.Pos(), "%s", err)
 		return
 	}
-	if opts.checkEnforceOnly && !directives[dirEnforce] {
-		return
-	}
-	if directives[dirIgnore] {
+	if !proceed {
 		return
 	}
 
@@ -660,7 +682,7 @@ func compositeLitComments(pass *analysis.Pass, comments ast.CommentMap, c inspec
 		}
 	}
 loop:
-	for c := range c.Enclosing() {
+	for c := range c.Enclosing((*ast.AssignStmt)(nil), (*ast.ValueSpec)(nil), (*ast.GenDecl)(nil)) {
 		switch n := c.Node().(type) {
 		case *ast.AssignStmt:
 			add(comments[n]...)
