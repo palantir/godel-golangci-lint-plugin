@@ -1,7 +1,9 @@
 /*
 Package predeclared provides a static analysis that finds
-declarations that shadow any of Go's predeclared identifiers. The
-list of predeclared identifiers can be found in the language
+declarations in Go source code that shadow any of Go's
+predeclared identifiers.
+
+The list of predeclared identifiers can be found in the language
 specification.
 
 	https://golang.org/ref/spec#Predeclared_identifiers
@@ -14,9 +16,9 @@ The analysis may be configured with flags. The synopsis is:
 
 The flags are described below.
 
-The -mode flag argument specifies the categories of issues that
-the analysis should report. The argument is a string containing
-one or more of the following letters. The default argument is the
+The -mode flag specifies the categories of issues that the
+analysis should report. The argument is a string containing one
+or more of the following letters. The default argument is the
 string "s".
 
 	d    declaration has same name as a predeclared identifier
@@ -27,12 +29,11 @@ the declaration has the same name as the predeclared identifier
 being shadowed. In general the declarations reported for mode 's'
 will be a subset of the declarations reported for mode 'd'.
 
-The -ignore flag argument is a comma-separated list of
-predeclared identifier names for which the analysis will not
-report issues. For example, given the following flag argument,
-the analysis will not report issues for the predeclared
-identifiers new, min, and max. The default argument is an empty
-string.
+The -ignore flag specifies a comma-separated list of predeclared
+identifier names for which the analysis will not report issues.
+For example, given the following argument, the analysis will
+not report issues for the predeclared identifiers new, min, and
+max. The default argument is an empty string.
 
 	-ignore "new,min,max"
 
@@ -102,7 +103,7 @@ func run(pass *analysis.Pass) (any, error) {
 		}
 	}
 
-	modes, err := parseMode(fMode)
+	modes, err := parseModes(fMode)
 	if err != nil {
 		return nil, fmt.Errorf("invalid value for flag -mode: %s", err)
 	}
@@ -119,7 +120,7 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
-func parseMode(s string) ([]mode, error) {
+func parseModes(s string) ([]mode, error) {
 	if s == "" {
 		return nil, errors.New("empty string")
 	}
@@ -156,23 +157,11 @@ type config struct {
 	ignore       map[string]struct{}
 }
 
-func assert(v bool) {
-	if !v {
-		panic("assertion failed")
-	}
-}
-
 func shadowsPredeclared(obj types.Object) bool {
-	if !doc.IsPredeclared(obj.Name()) {
-		panic("bad object name")
-	}
-
 	u := types.Universe.Lookup(obj.Name())
-	assert(u != nil) // should not fail; see doc.IsPredeclared guard above.
-
-	// Note that if obj is a label, field, or method, then c
-	// will be nil. The validity of the 'c == u' result still
-	// holds because u is always non-nil.
+	if u == nil {
+		return false
+	}
 	c := lookupWhile(obj.Parent(), obj.Name(), obj.Pos(), func(obj2 types.Object) bool { return obj2 == obj })
 	return c == u
 }
@@ -228,29 +217,33 @@ func handleObject(obj types.Object, cfg *config, report func(mode, token.Pos, st
 		return
 	}
 
+	// For the purposes of this analysis, the pkgLevelOnly
+	// option means both true package-level declarations and
+	// import declarations.
 	if cfg.pkgLevelOnly {
 		switch obj.(type) {
 		case *types.PkgName:
-			// *types.PkgName represents imported Go
-			// packages (in import declarations).
+			// *types.PkgName represents an imported Go
+			// package in an import declaration.
 			// Proceed below.
-			_ = obj // Dummy statement to verify code coverage.
+			_ = obj // dummy statement to verify code coverage
 		default:
-			// constant, variable, type, or function.
+			// Package-level objects will be a
+			// constant, variable, type, or function
+			// (does not include method) declaration.
 			if !isPkgLevel(obj) {
 				return
 			}
 		}
 	}
 
-modeloop:
 	for _, mode := range cfg.modes {
 		switch mode {
 		case declare:
 			switch obj := obj.(type) {
 			case *types.Var:
 				if obj.IsField() && !cfg.checkFields {
-					continue modeloop
+					continue
 				}
 			case *types.Func:
 				// go/types documentation for (*types.Func).Parent:
@@ -258,7 +251,7 @@ modeloop:
 				// is declared. The result is nil for methods and
 				// struct fields."
 				if obj.Parent() == nil && !cfg.checkFields {
-					continue modeloop
+					continue
 				}
 			}
 		case shadow:
@@ -269,18 +262,18 @@ modeloop:
 				// Go spec: "In contrast to other identifiers, labels are
 				// not block scoped and do not conflict with identifiers
 				// that are not labels."
-				continue modeloop
+				continue
 			case *types.Var:
 				if obj.IsField() {
-					continue modeloop
+					continue
 				}
 			case *types.Func:
 				if obj.Parent() == nil {
-					continue modeloop
+					continue
 				}
 			}
 			if !shadowsPredeclared(obj) {
-				continue modeloop
+				continue
 			}
 		}
 		report(mode, obj.Pos(), obj.Name())
