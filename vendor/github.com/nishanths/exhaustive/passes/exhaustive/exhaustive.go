@@ -47,6 +47,7 @@ func init() {
 	Analyzer.Flags.Var(&fExcludeType, "typeignore", "switches in which the type name is matched by `regexp` are not checked")
 	Analyzer.Flags.Var(&fIncludeType, "typeonly", "only switches in which the type name is matched by `regexp` are checked")
 	Analyzer.Flags.Var(&fExcludeConst, "constignore", "constant names matched by `regexp` do not have to be included in the case clauses of an expression switch")
+	Analyzer.Flags.BoolVar(&fCheckImpossible, "impossible", fCheckImpossible, "check for unreachable cases in type switches")
 }
 
 var (
@@ -59,6 +60,7 @@ var (
 	fIncludeType        = repeatFlag[*regexp.Regexp]{set: regexp.Compile}
 	fExcludeType        = repeatFlag[*regexp.Regexp]{set: regexp.Compile}
 	fExcludeConst       = repeatFlag[*regexp.Regexp]{set: regexp.Compile}
+	fCheckImpossible    = false
 )
 
 func resetFlags() {
@@ -71,6 +73,7 @@ func resetFlags() {
 	fIncludeType = repeatFlag[*regexp.Regexp]{set: regexp.Compile}
 	fExcludeType = repeatFlag[*regexp.Regexp]{set: regexp.Compile}
 	fExcludeConst = repeatFlag[*regexp.Regexp]{set: regexp.Compile}
+	fCheckImpossible = false
 }
 
 // repeatFlag defines a flag that may be repeated to specify
@@ -135,6 +138,7 @@ type options struct {
 	includeTypePatterns   []*regexp.Regexp
 	excludeTypePatterns   []*regexp.Regexp
 	excludeConstPatterns  []*regexp.Regexp
+	checkImpossible       bool
 }
 
 func run(pass *analysis.Pass) (any, error) {
@@ -152,6 +156,7 @@ func run(pass *analysis.Pass) (any, error) {
 		includeTypePatterns:   fIncludeType.vals,
 		excludeTypePatterns:   fExcludeType.vals,
 		excludeConstPatterns:  fExcludeConst.vals,
+		checkImpossible:       fCheckImpossible,
 	}
 
 	var nodes []ast.Node
@@ -175,19 +180,17 @@ func run(pass *analysis.Pass) (any, error) {
 			return false
 		}
 
-		var cmap ast.CommentMap
-
 		c.Inspect(nodes, func(c inspector.Cursor) (descend bool) {
-			if cmap == nil {
-				cmap = ast.NewCommentMap(pass.Fset, file, file.Comments)
-			}
 			switch n := c.Node().(type) {
 			case *ast.SwitchStmt:
-				checkExprSwitch(pass, n, cmap[n], opts)
+				comments := switchComments(c, pass.Fset, file.Comments)
+				checkExprSwitch(pass, n, comments, opts)
 			case *ast.CompositeLit:
-				checkMapLit(pass, n, compositeLitComments(pass, cmap, c), opts)
+				comments := compositeLitComments(c, pass.Fset, file.Comments)
+				checkMapLit(pass, n, comments, opts)
 			case *ast.TypeSwitchStmt:
-				checkTypeSwitch(pass, n, cmap[n], typeSwitchCh, opts)
+				comments := switchComments(c, pass.Fset, file.Comments)
+				checkTypeSwitch(pass, n, comments, typeSwitchCh, opts)
 			default:
 				panic(fmt.Sprintf("internal error: unexpected node of type %T", n))
 			}
