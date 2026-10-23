@@ -763,7 +763,7 @@ github.com/palantir/pkg/specdir
 github.com/palantir/pkg/yamlpatch/goccyyamlpatcher
 github.com/palantir/pkg/yamlpatch/internal/yamlpatchcommon
 github.com/palantir/pkg/yamlpatch/yamlpatch
-# github.com/palantir/witchcraft-go-error v1.50.0
+# github.com/palantir/witchcraft-go-error v1.51.0
 ## explicit; go 1.27.0
 github.com/palantir/witchcraft-go-error
 github.com/palantir/witchcraft-go-error/internal/errors
