@@ -573,7 +573,6 @@ github.com/gostaticanalysis/nilerr
 github.com/hashicorp/go-immutable-radix/v2
 # github.com/hashicorp/go-uuid v1.0.4
 ## explicit; go 1.25.13
-github.com/hashicorp/go-uuid
 # github.com/hashicorp/go-version v1.9.0
 ## explicit
 github.com/hashicorp/go-version
@@ -776,8 +775,8 @@ github.com/palantir/witchcraft-go-error/internal/errors
 # github.com/palantir/witchcraft-go-params v1.50.0
 ## explicit; go 1.27.0
 github.com/palantir/witchcraft-go-params
-# github.com/pandatix/go-abnf v0.5.1
-## explicit; go 1.24.4
+# github.com/pandatix/go-abnf v0.5.3
+## explicit; go 1.26.0
 github.com/pandatix/go-abnf
 # github.com/pelletier/go-toml/v2 v2.4.3
 ## explicit; go 1.21.0
