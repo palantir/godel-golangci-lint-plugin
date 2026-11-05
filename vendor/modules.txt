@@ -519,7 +519,7 @@ github.com/golangci/golangci-lint/v2/pkg/report
 github.com/golangci/golangci-lint/v2/pkg/result
 github.com/golangci/golangci-lint/v2/pkg/result/processors
 github.com/golangci/golangci-lint/v2/pkg/timeutils
-# github.com/golangci/golines v0.16.0
+# github.com/golangci/golines v0.16.1
 ## explicit; go 1.26.0
 github.com/golangci/golines/shorten
 github.com/golangci/golines/shorten/internal
@@ -622,7 +622,7 @@ github.com/ldez/gomoddirectives
 ## explicit; go 1.24.0
 github.com/ldez/grignotin/goenv
 github.com/ldez/grignotin/gomod
-# github.com/ldez/structtags v0.6.1
+# github.com/ldez/structtags v0.6.2
 ## explicit; go 1.24.0
 github.com/ldez/structtags/parser
 # github.com/ldez/tagliatelle v0.8.0
