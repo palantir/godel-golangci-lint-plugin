@@ -79,8 +79,8 @@ github.com/MirrexOne/unqueryvet
 github.com/MirrexOne/unqueryvet/internal/analyzer
 github.com/MirrexOne/unqueryvet/internal/analyzer/sqlbuilders
 github.com/MirrexOne/unqueryvet/pkg/config
-# github.com/OpenPeeDeeP/depguard/v2 v2.2.1
-## explicit; go 1.23.0
+# github.com/OpenPeeDeeP/depguard/v2 v2.3.0
+## explicit; go 1.26.0
 github.com/OpenPeeDeeP/depguard/v2
 github.com/OpenPeeDeeP/depguard/v2/internal/utils
 # github.com/VividCortex/ewma v1.2.0
