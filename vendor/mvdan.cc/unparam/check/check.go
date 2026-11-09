@@ -279,37 +279,8 @@ func (c *Checker) Check() ([]Issue, error) {
 		}
 	}
 
-	// map from *ssa.FreeVar to *ssa.Function, to find function literals
-	// behind closure vars in the simpler scenarios.
-	freeVars := map[*ssa.FreeVar]*ssa.Function{}
-	for curFunc := range allFuncs {
-		for _, b := range curFunc.Blocks {
-			for _, instr := range b.Instrs {
-				instr, ok := instr.(*ssa.MakeClosure)
-				if !ok {
-					continue
-				}
-				fn := instr.Fn.(*ssa.Function)
-				for i, fv := range fn.FreeVars {
-					binding := instr.Bindings[i]
-					alloc, ok := binding.(*ssa.Alloc)
-					if !ok {
-						continue
-					}
-					for _, ref := range *alloc.Referrers() {
-						store, ok := ref.(*ssa.Store)
-						if !ok {
-							continue
-						}
-						if fn, ok := store.Val.(*ssa.Function); ok {
-							freeVars[fv] = fn
-							break
-						}
-					}
-				}
-			}
-		}
-	}
+	// Find the function literals behind closure vars in the simpler scenarios.
+	freeVars := capturedFuncs(allFuncs)
 
 	c.signRequiredBy = make(map[*ssa.Function]string)
 	c.paramsRequiredBy = make(map[*ssa.Function]string)
@@ -362,7 +333,12 @@ func (c *Checker) Check() ([]Issue, error) {
 						}
 					}
 				case *ssa.Store:
-					as := ""
+					fn := findFunction(freeVars, instr.Val)
+					if fn == nil || fn == freeVars[instr.Addr] {
+						// a closure var whose calls we follow
+						continue
+					}
+					as := "pointer" // *somePtr = fn
 					switch instr.Addr.(type) {
 					case *ssa.FieldAddr:
 						// x.someField = fn
@@ -373,12 +349,11 @@ func (c *Checker) Check() ([]Issue, error) {
 					case *ssa.Global:
 						// someGlobal = fn
 						as = "global"
-					default:
-						continue
+					case *ssa.Alloc, *ssa.FreeVar:
+						// someVar = fn
+						as = "local variable"
 					}
-					if fn := findFunction(freeVars, instr.Val); fn != nil {
-						c.signRequiredBy[fn] = as
-					}
+					c.signRequiredBy[fn] = as
 				case *ssa.MapUpdate:
 					if fn := findFunction(freeVars, instr.Value); fn != nil {
 						// someMap[someKey] = fn
@@ -483,8 +458,86 @@ func findNamed(typ types.Type) *types.Named {
 	return nil
 }
 
+// capturedFuncs finds the functions behind func variables captured by closures,
+// keyed by each variable's [ssa.Alloc] and its [ssa.FreeVar] in every closure.
+// A variable is only resolved if its address does not escape and it is only
+// ever assigned the same function, which may be a copy of another variable.
+func capturedFuncs(allFuncs map[*ssa.Function]bool) map[ssa.Value]*ssa.Function {
+	// Nested closures bind a free var of the enclosing closure.
+	bindings := make(map[*ssa.FreeVar]ssa.Value)
+	for fn := range allFuncs {
+		for _, b := range fn.Blocks {
+			for _, instr := range b.Instrs {
+				instr, ok := instr.(*ssa.MakeClosure)
+				if !ok {
+					continue
+				}
+				for i, fv := range instr.Fn.(*ssa.Function).FreeVars {
+					if ptr, ok := fv.Type().(*types.Pointer); ok {
+						if _, ok := ptr.Elem().Underlying().(*types.Signature); ok {
+							bindings[fv] = instr.Bindings[i]
+						}
+					}
+				}
+			}
+		}
+	}
+	freeVars := make(map[*ssa.Alloc][]ssa.Value)
+	for fv := range bindings {
+		var val ssa.Value = fv
+		for outer, ok := val.(*ssa.FreeVar); ok; outer, ok = val.(*ssa.FreeVar) {
+			val = bindings[outer]
+		}
+		if alloc, ok := val.(*ssa.Alloc); ok {
+			if freeVars[alloc] == nil {
+				freeVars[alloc] = []ssa.Value{alloc}
+			}
+			freeVars[alloc] = append(freeVars[alloc], fv)
+		}
+	}
+	funcs := make(map[ssa.Value]*ssa.Function)
+	// Repeat until nothing new is resolved, to follow copies of other vars.
+	for resolved := true; resolved; {
+		resolved = false
+	allocs:
+		for alloc, vals := range freeVars {
+			if funcs[alloc] != nil {
+				continue
+			}
+			var fn *ssa.Function
+			for _, val := range vals {
+				for _, ref := range *val.Referrers() {
+					switch ref := ref.(type) {
+					case *ssa.UnOp, *ssa.MakeClosure, *ssa.DebugRef:
+						continue // loads, and bindings in nested closures
+					case *ssa.Store:
+						if ref.Addr != val {
+							break
+						}
+						if _, ok := ref.Val.(*ssa.Const); ok {
+							continue // nil
+						}
+						if f := findFunction(funcs, ref.Val); f != nil && (fn == nil || f == fn) {
+							fn = f
+							continue
+						}
+					}
+					continue allocs // the address escapes, or another func is assigned
+				}
+			}
+			if fn != nil {
+				for _, val := range vals {
+					funcs[val] = fn
+				}
+				resolved = true
+			}
+		}
+	}
+	return funcs
+}
+
 // findFunction returns the function that is behind a value, if any.
-func findFunction(freeVars map[*ssa.FreeVar]*ssa.Function, value ssa.Value) *ssa.Function {
+func findFunction(freeVars map[ssa.Value]*ssa.Function, value ssa.Value) *ssa.Function {
 	switch value := value.(type) {
 	case *ssa.Function:
 		name := value.Name()
@@ -511,9 +564,7 @@ func findFunction(freeVars map[*ssa.FreeVar]*ssa.Function, value ssa.Value) *ssa
 		if value.Op != token.MUL {
 			break
 		}
-		if fv, ok := value.X.(*ssa.FreeVar); ok {
-			return freeVars[fv]
-		}
+		return freeVars[value.X]
 	}
 	return nil
 }
@@ -726,36 +777,28 @@ func (c *Checker) alwaysReceivedConst(callSites []ssa.CallInstruction, par *ssa.
 		// times, hence a potential false positive.
 		return ""
 	}
-	if ast.IsExported(par.Parent().Name()) {
+	fn := par.Parent()
+	if ast.IsExported(fn.Name()) {
 		// we might not have all call sites for an exported func
 		return ""
 	}
-	var seen *ssa.Const
-	origPos := pos
-	if par.Parent().Signature.Recv() != nil {
-		// go/ast's CallExpr.Args does not include the receiver, but
-		// go/ssa's equivalent does.
-		origPos--
+	if fn.Signature.Recv() != nil {
+		pos-- // paramArgs and go/ast's CallExpr.Args exclude the receiver
 	}
+	var seen *ssa.Const
 	seenOrig := ""
 	for _, site := range callSites {
 		call := site.Common()
-		if pos >= len(call.Args) {
-			// TODO: investigate? Weird crash in
-			// internal/x/net/http2/hpack/hpack_test.go, where we
-			// roughly do: "at := d.mustAt; at(3)".
-			return ""
-		}
-		cnst := constValue(call.Args[pos])
+		cnst := constValue(paramArgs(call, fn)[pos])
 		if cnst == nil {
 			return "" // not a constant
 		}
 		origArg := ""
 		origCall := c.callByPos[call.Pos()]
-		if origPos >= len(origCall.Args) {
+		if pos >= len(origCall.Args) {
 			// variadic parameter that wasn't given
 		} else {
-			origArg = nodeStr(origCall.Args[origPos])
+			origArg = nodeStr(origCall.Args[pos])
 		}
 		if seen == nil {
 			seen = cnst // first constant
@@ -1006,11 +1049,20 @@ func (c *Checker) multipleImpls(pkg *packages.Package, fn *ssa.Function) bool {
 	return count[name] > 1
 }
 
+// paramArgs returns the arguments of a call to fn, excluding any receiver,
+// which a call via a bound method value like "f := x.Method" does not have.
+func paramArgs(call *ssa.CallCommon, fn *ssa.Function) []ssa.Value {
+	if fn.Signature.Recv() != nil && len(call.Args) > fn.Signature.Params().Len() {
+		return call.Args[1:]
+	}
+	return call.Args
+}
+
 // receivesExtractedArgs returns the statically called function, if its multiple
 // arguments were all received via another function call. That is, if a call to
 // function "foo" was of the form "foo(bar())". This often means that the
 // parameters in "foo" are difficult to remove, even if unused.
-func receivesExtractedArgs(freeVars map[*ssa.FreeVar]*ssa.Function, call ssa.CallInstruction) *ssa.Function {
+func receivesExtractedArgs(freeVars map[ssa.Value]*ssa.Function, call ssa.CallInstruction) *ssa.Function {
 	comm := call.Common()
 	callee := findFunction(freeVars, comm.Value)
 	if callee == nil {
@@ -1020,12 +1072,7 @@ func receivesExtractedArgs(freeVars map[*ssa.FreeVar]*ssa.Function, call ssa.Cal
 		// there aren't multiple parameters
 		return nil
 	}
-	args := comm.Args
-	if callee.Signature.Recv() != nil {
-		// skip the receiver argument
-		args = args[1:]
-	}
-	if c := callExtract(call, args); c != nil {
+	if c := callExtract(call, paramArgs(comm, callee)); c != nil {
 		return callee
 	}
 	return nil
