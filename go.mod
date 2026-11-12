@@ -160,7 +160,7 @@ require (
 	github.com/palantir/pkg v1.3.0 // indirect
 	github.com/palantir/pkg/gotoolchain v0.1.0 // indirect
 	github.com/palantir/pkg/specdir v1.4.0 // indirect
-	github.com/palantir/witchcraft-go-error v1.51.0 // indirect
+	github.com/palantir/witchcraft-go-error v1.52.0 // indirect
 	github.com/palantir/witchcraft-go-params v1.51.0 // indirect
 	github.com/pandatix/go-abnf v0.5.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect

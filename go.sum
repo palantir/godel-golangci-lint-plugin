@@ -363,8 +363,8 @@ github.com/palantir/pkg/specdir v1.4.0 h1:rhDOb2OehhLEYw7dR+gBKlT9iS2f8jlVXHa/6v
 github.com/palantir/pkg/specdir v1.4.0/go.mod h1:lccMX+mjwigJiM0XKwBeKc4gZcaSsbnx1acM4xayhCw=
 github.com/palantir/pkg/yamlpatch v1.5.0 h1:186RUlcHFVf64onUhaI7nUCPzPIaRTQ5HJlKuv0d6NM=
 github.com/palantir/pkg/yamlpatch v1.5.0/go.mod h1:45cYAIiv9E0MiZnHjIIT2hGqi6Wah/DL6J1omJf2ny0=
-github.com/palantir/witchcraft-go-error v1.51.0 h1:wmlzMm/7rj0SGHhuSe5NAsKSi7ICmFFUSFKOrJSlG+U=
-github.com/palantir/witchcraft-go-error v1.51.0/go.mod h1:tqPzDsIBZnH1wJ9hjbeYJtIDEFZS5v8sKNUmRRNeBy0=
+github.com/palantir/witchcraft-go-error v1.52.0 h1:F8day0K4Gw27j2LBDaVfZwamJi1xgfrZzREFioGozYI=
+github.com/palantir/witchcraft-go-error v1.52.0/go.mod h1:0QtYJxZT4kImF23FvUBOXM9djDraot7nxlMBp2rvxkk=
 github.com/palantir/witchcraft-go-params v1.51.0 h1:YtpoTK3WIcmSvsg+5RH1JqjF6xVzMHVgpAvIFVfpGgM=
 github.com/palantir/witchcraft-go-params v1.51.0/go.mod h1:12K0HWtdMRULr0FHr/lvV2JvEodvPo1rpurliig9W20=
 github.com/pandatix/go-abnf v0.5.5 h1:EXex5KkRQx4Dm6GnpAcQnIMBs9KiK0uf8p/wq+4t9PM=
