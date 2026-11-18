@@ -347,8 +347,8 @@ github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJ
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=
 github.com/otiai10/mint v1.3.0/go.mod h1:F5AjcsTsWUqX+Na9fpHb52P8pcRX2CI6A3ctIT91xUo=
 github.com/otiai10/mint v1.3.1/go.mod h1:/yxELlJQ0ufhjUwhshSj+wFjZ78CnZ48/1wtmBH1OTc=
-github.com/palantir/godel/v2 v2.205.0 h1:0JothckF7C4xQLyNrXL7XLd4O6tIgqpHikLX8ghKq9o=
-github.com/palantir/godel/v2 v2.205.0/go.mod h1:kEsYNEJmPBl3MsSJUVLZO2T24a6y8WkEVpwXaasnZHg=
+github.com/palantir/godel/v2 v2.206.0 h1:F1jVv9pckuNXHlg0l4FmdqOKvfdwgoRJerXB5Lhiq2c=
+github.com/palantir/godel/v2 v2.206.0/go.mod h1:jUady7fUkN4A6c++7Xhr1m/7BO1nHtupyyRee+6S9p0=
 github.com/palantir/pkg v1.3.0 h1:v3n/nDkdNQjwASw9CoC5ur1ghpHT44mOmQ+bavVR3pk=
 github.com/palantir/pkg v1.3.0/go.mod h1:qB+RCNzPSp4oF6fjtZNdN6ygAjwKCCblfWgg8N/9abA=
 github.com/palantir/pkg/cobracli v1.4.0 h1:pMSAaz3rzfkVuaGgOmrgqMkDefizoHdcXtzUroFf5u8=
